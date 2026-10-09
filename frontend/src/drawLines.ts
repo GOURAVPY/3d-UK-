@@ -1,8 +1,8 @@
-import type maplibregl from "maplibre-gl";
+import type { Map } from "maplibre-gl";
 import type { Line } from "./types";
 
 // Draw each line's track in its real colour, with a dot for every station.
-export function drawLines(map: maplibregl.Map, lines: Line[]) {
+export function drawLines(map: Map, lines: Line[]) {
   map.addSource("lines", {
     type: "geojson",
     data: {
