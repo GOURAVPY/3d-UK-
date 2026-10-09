@@ -1,0 +1,8 @@
+html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+.map { position: absolute; inset: 0; }
+.key {
+  position: absolute; top: 12px; left: 12px; max-height: calc(100% - 24px); overflow: auto;
+  background: rgba(255, 255, 255, 0.92); padding: 8px 12px; border-radius: 8px; font-size: 13px;
+}
+.key div { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.key i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
