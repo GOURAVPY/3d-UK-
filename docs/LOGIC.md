@@ -18,15 +18,15 @@ The browser never talks to TfL. The key stays in `backend/.env`.
 ## Built (Week 2)
 Steps 1–3 and 8 below are done: polling, grouping by vehicle, soonest prediction, WebSocket push. Trains are placed at their next station. Predictions with no `vehicleId` (DLR) are skipped.
 
-## Planned: train positions (Weeks 2–3)
-TfL gives arrival predictions, not GPS, so we estimate.
-1. Every 30 s fetch `/Line/{id}/Arrivals` per line (about 19 requests, far under 500/min).
-2. Group predictions by `vehicleId` + `lineId`. The same train appears in many stations' lists.
-3. Keep the prediction with the smallest `timeToStation`. That is the train's next station.
-4. `currentLocation` ("Between A and B") gives the previous station.
-5. Find the track segment between previous and next station.
-6. Progress = 1 − timeLeft / segmentTime. Example: 2 min trip, 30 s left -> 0.75 along.
-7. Place the train at that fraction along the polyline.
-8. Send all trains over the WebSocket. The browser eases each train to its new spot 60 times a second.
+## Built (Week 3): train positions
+TfL gives arrival predictions, not GPS, so we estimate. Every 30 s:
+1. Fetch `/Line/{id}/Arrivals` per line (19 requests, far under 500/min).
+2. Group predictions by `vehicleId`. Sort each group by `timeToStation`. The first is the next stop, the second says which way it is heading.
+3. Station behind the train = a neighbour of the next stop (from the line stop sequence) that is not the second stop. At a terminus the only neighbour is kept, because the train turns back.
+4. Track = the shortest slice of any line path that touches both stations (straight line if none).
+5. Remaining distance = min(timeToStation x speed, track length).
+6. Position = point on the track that far behind the next stop. Speed is a per-mode guess (tube 11, DLR 9, Elizabeth 17, Overground 14 m/s).
+7. Do the same with `timeToStation - 30` for where the train will be one poll later.
+8. Send both points over the WebSocket. The browser glides each train from the spot it is drawn at to the new target over 30 s, every animation frame.
 
-Edge cases to handle: `currentLocation` is "At Station" or "Approaching"; a train disappears from the feed; a branch (two possible paths); 429 rate limit (back off).
+Edge cases still open: dwell time at stations, trains with a far-off next stop sit at the previous station, branches with two possible previous stations (name hint used), 429 rate limit (back off), no DLR vehicle ids.
