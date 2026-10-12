@@ -1,4 +1,4 @@
-import type { GeoJSONSource, Map } from "maplibre-gl";
+import type { Map } from "maplibre-gl";
 import type { Camera } from "./types";
 
 // TfL JamCams as orange dots. Clicking one calls onSelect with the camera.
@@ -42,14 +42,3 @@ export function setCamerasVisible(map: Map, visible: boolean) {
   if (map.getLayer("cameras")) map.setLayoutProperty("cameras", "visibility", visible ? "visible" : "none");
 }
 
-// Kept for symmetry with trains: replace the camera data later if it is refreshed.
-export function setCameraData(map: Map, cameras: Camera[]) {
-  (map.getSource("cameras") as GeoJSONSource | undefined)?.setData({
-    type: "FeatureCollection",
-    features: cameras.filter((c) => c.available).map((c) => ({
-      type: "Feature" as const,
-      properties: { id: c.id },
-      geometry: { type: "Point" as const, coordinates: [c.lon, c.lat] },
-    })),
-  });
-}
