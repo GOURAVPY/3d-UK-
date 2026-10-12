@@ -25,3 +25,31 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 .streams a { display: block; color: #0a58ca; margin: 4px 0; }
 .streams iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 6px; margin-top: 6px; }
 .streams small { color: #666; display: block; margin-top: 6px; }
+.panel {
+  position: absolute; bottom: 16px; left: 12px; width: 320px; max-width: calc(100% - 24px);
+  background: rgba(255, 255, 255, 0.97); border-radius: 10px; padding: 12px 14px 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25); font-size: 13px;
+}
+.panel h3 { margin: 0 24px 8px 0; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.panel .close {
+  position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 22px; cursor: pointer;
+}
+.panel .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+.panel dl { display: grid; grid-template-columns: 90px 1fr; gap: 4px 8px; margin: 0 0 10px; }
+.panel dt { color: #666; }
+.panel dd { margin: 0; font-weight: 600; }
+.panel .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel .row small { color: #777; font-size: 11px; text-align: right; }
+.panel button:not(.close), .tools button {
+  border: 1px solid #ccc; background: #fff; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+}
+.panel button.on { background: #1b6ef3; color: #fff; border-color: #1b6ef3; }
+.panel .muted { color: #666; margin: 4px 0; }
+.board { background: #0d1117; color: #ffd24a; font-family: ui-monospace, Consolas, monospace; }
+.board h3 { color: #fff; }
+.board .close { color: #fff; }
+.board ol { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow: auto; }
+.board li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #222a35; }
+.board .dest { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+.board .plat { color: #8aa; font-size: 11px; white-space: nowrap; }
+.board b { min-width: 44px; text-align: right; }
