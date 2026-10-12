@@ -134,7 +134,7 @@ export function createFlightsLayer() {
       renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
       renderer.autoClear = false;
       const geo = planeGeometries();
-      body = new THREE.InstancedMesh(geo.body, new THREE.MeshLambertMaterial({ color: 0xeef1f4 }), MAX_PLANES);
+      body = new THREE.InstancedMesh(geo.body, new THREE.MeshLambertMaterial({ color: 0xc3ced8 }), MAX_PLANES);
       tail = new THREE.InstancedMesh(geo.tail, new THREE.MeshLambertMaterial({ color: 0xffffff }), MAX_PLANES);
       shadow = new THREE.InstancedMesh(
         new THREE.CircleGeometry(0.5, 20),
@@ -160,7 +160,8 @@ export function createFlightsLayer() {
       for (const [id, p] of planes) {
         if (n >= MAX_PLANES) break;
         const isSel = id === selected;
-        const size = Math.max(p.length, floor) * (isSel ? 1.5 : 1);
+        // the selected aircraft is drawn bigger, so its shape is easy to see
+        const size = isSel ? Math.max(p.length * 1.5, floor * 4) : Math.max(p.length, floor);
         const at = place(p, now);
         const heading = (-p.track * Math.PI) / 180;
         const pitch = p.onGround ? 0 : Math.atan2(p.vz, Math.max(Math.hypot(p.vx, p.vy), 1));
@@ -216,12 +217,12 @@ export function createFlightsLayer() {
       map?.triggerRepaint();
     },
     // Where an aircraft is drawn right now, for follow mode.
-    positionOf(id: string): { lon: number; lat: number; heading: number } | null {
+    positionOf(id: string): { lon: number; lat: number; heading: number; alt: number } | null {
       const p = planes.get(id);
       if (!p) return null;
       const at = place(p, performance.now());
       const [lon, lat] = fromLocal(at.x, at.y);
-      return { lon, lat, heading: p.track };
+      return { lon, lat, heading: p.track, alt: at.z };
     },
     // Nearest aircraft to a screen point, within a finger-sized radius.
     pick(x: number, y: number): string | null {

@@ -142,16 +142,20 @@ export function App() {
     let raf = 0;
     const stop = () => setFollowing(false);
     map.on("dragstart", stop);
+    // aircraft fly high: aim the camera at the plane itself, not the ground under it
+    if (!selectedId) map.setCenterClampedToGround(false);
     const tick = () => {
       const p = selectedId
         ? trains3d.current?.positionOf(targetId)
         : flights3d.current?.positionOf(targetId);
       if (p) {
+        const alt = (p as { alt?: number }).alt;
+        if (!selectedId && alt !== undefined) map.setCenterElevation(alt);
         const delta = ((p.heading - map.getBearing() + 540) % 360) - 180; // shortest turn
         map.jumpTo({
           center: [p.lon, p.lat],
           bearing: map.getBearing() + delta * 0.04,
-          zoom: map.getZoom() + (FOLLOW_ZOOM - map.getZoom()) * 0.06,
+          zoom: map.getZoom() + ((selectedId ? FOLLOW_ZOOM : 17) - map.getZoom()) * 0.06,
           pitch: map.getPitch() + (62 - map.getPitch()) * 0.06,
         });
       }
@@ -161,6 +165,10 @@ export function App() {
     return () => {
       cancelAnimationFrame(raf);
       map.off("dragstart", stop);
+      if (!selectedId) {
+        map.setCenterElevation(0);
+        map.setCenterClampedToGround(true);
+      }
     };
   }, [ready, following, selectedId, selectedFlightId]);
 
