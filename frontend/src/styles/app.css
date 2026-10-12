@@ -139,3 +139,7 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 .board .chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .board .facts { margin: 4px 0 0; color: #b6bac6; font-size: 12px; line-height: 1.4; }
 .board .facts.addr { color: #8a8f9c; font-size: 11px; }
+/* the station panel and the line key share the left edge: keep their heights from meeting */
+.key { max-height: 36vh; }
+.panel.board { max-height: 54vh; display: flex; flex-direction: column; overflow: hidden; }
+.panel.board ol { flex: 1; min-height: 0; max-height: none; }
