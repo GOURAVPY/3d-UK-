@@ -18,6 +18,7 @@ export interface Train {
   lon: number;
   toLat: number; // where it will be after `horizonS` seconds
   toLon: number;
+  heading: number; // compass degrees, 0 = north
 }
 
 interface Prediction {
@@ -63,11 +64,13 @@ export async function fetchTrains(
 
       let pos = at;
       let soon = at;
+      let heading = 0;
       const prev = lt.prevStation(next.naptanId, preds[1]?.naptanId, next.currentLocation);
       const track = prev ? lt.trackBetween(prev, next.naptanId) : null;
       if (track) {
         pos = lt.positionAt(track, next.timeToStation);
         soon = lt.positionAt(track, next.timeToStation - horizonS);
+        heading = lt.headingAt(track, next.timeToStation);
       }
       trains.push({
         id: `${line.id}:${vehicleId}`,
@@ -85,6 +88,7 @@ export async function fetchTrains(
         lon: pos[0],
         toLat: soon[1],
         toLon: soon[0],
+        heading,
       });
     }
   });
