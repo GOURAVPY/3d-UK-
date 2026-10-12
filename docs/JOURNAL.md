@@ -330,3 +330,31 @@ Trains whose next arrival is far off were parked at the station they had just le
 - A queue is a visual stand-in: we do not know where a waiting train really is.
 - Elevated detection depends on OpenStreetMap having tagged the bridge or viaduct.
 - Ghost trains use a flat transparency, so two ghosts overlapping look slightly darker.
+
+## 2026-10-12 — Week 5: train timeline, delay alerts, phone polish, replay
+
+### Train panel like Mini Tokyo 3D
+- Reference screenshot: coloured line bar, "Local for Choshi", a collapse arrow, and a timeline of stops with times.
+- Backend keeps the upcoming stops of every train from the last poll and serves them at `GET /api/trains/:id/stops`.
+- `TrainPanel.tsx`: line colour bar, "Westbound for Heathrow Terminal 5", a chevron to fold the list, a vertical timeline with a pip per stop, the next stop highlighted, London time and minutes for each. Refreshes every 15 s.
+- `?train=piccadilly:312` opens a train's panel on load.
+
+### Delay alerts
+- `status.ts` polls `/Line/Mode/.../Status` every 2 minutes and pushes it over Socket.io (`GET /api/status`). A line is reported by its worst status.
+- Browser: an amber pill "1 line with delays" (red when severe) opens a list with TfL's own reason text. Disrupted lines get a halo layer under their lane: amber for delays, red for severe delays and closures.
+- Checked against a real disruption: Piccadilly "Minor Delays between Acton Town and Uxbridge due to an earlier signalling problem".
+
+### Phone polish
+- `device.ts`: small screen and touch detection. Pixel ratio capped at 1.5 on phones, 3D buildings only from zoom 14.5, tap radius 30 px instead of 18, trains drawn at 70% size.
+- Layout under 640 px: key hidden, panels are bottom sheets, alert pill top left, tools below the counter, 38 px minimum button height.
+- Checked in the 375 x 812 emulator after fixing an overlap of the tool buttons and the counter. Not tried on a real phone.
+
+### Replay
+- `history.ts` writes every poll as one JSON line (`data/history.jsonl`, git-ignored) with trains reduced to numbers: line, vehicle, from, to, before, after, d0, d1, heading. Station and line ids are replaced by table positions saved in `history-meta.json`; if the table changes, history is discarded. Only an in-memory index is kept; slices are read on request. Older than 24 h is trimmed hourly. About 28 KB per snapshot.
+- `GET /api/history/info` and `GET /api/history?from&to` (at most 400 snapshots).
+- `ReplayBar.tsx`: play/pause, scrubber, London time, 60x. It fetches 20 minutes at a time, shows the latest snapshot at or before the playback moment, and the 3D layer glides between snapshots over 0.5 s (`setGlideMs`) instead of 30 s.
+
+### Known limits
+- Replay only covers what the server has recorded, so it needs the server running; right after a start there are only minutes of history. Killing the server does not lose it (it is on disk), but a gap appears.
+- A replayed train has no destination or stop names (they are not stored), so the panel is disabled during replay.
+- Flights are not recorded.

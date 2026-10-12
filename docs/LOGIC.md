@@ -60,3 +60,9 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 2. Browser: `TrackIndex` turns the runs into a level profile per chain (`levelAt`) and splits every drawn link into one feature per level. Map layers: dashed faint (underground), casing plus lane (elevated), glow plus lane (surface).
 3. Trains: each carriage looks up the level at its own centre. Underground carriages go into the ghost meshes (transparent) and sit lower; elevated carriages sit higher.
 4. Waiting trains (d0 = 0) are queued behind their station on the server (`queueWaitingTrains`).
+
+## Alerts, history and replay
+- **Status:** server polls `/Line/Mode/.../Status` every 2 min and emits `status`; the browser lights the line's halo and the alert pill.
+- **Stops:** `stopsFor(trainId)` returns the upcoming stops from the last poll for the timeline panel.
+- **History:** each poll is appended to `data/history.jsonl` as numbers only; an in-memory index of (time, offset, length) lets `GET /api/history` read slices. Trimmed to 24 h.
+- **Replay:** the browser fetches 20 minute windows, advances a virtual clock 60x faster than real time, and feeds the snapshot at or before it to the train layer with a 0.5 s glide.

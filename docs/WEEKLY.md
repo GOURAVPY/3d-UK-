@@ -46,10 +46,16 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Lessons:** a custom 3D layer needs its own picking; project positions to screen and take the nearest.
 **Next week:** Week 5 below.
 
-## Week 5 — Day/night, delay alerts, replay, phone polish 🟨
+## Week 5 — Day/night, delay alerts, replay, phone polish ✅ (2026-10-12)
 **Goal:** lighting by London time, service status alerts, 24 h replay at 60x, mobile.
-**Done so far:** day and night by real sunset in London, dark Mini Tokyo style glowing lanes, theme button, London clock.
-**Still to do:** live delay alerts, 24 h replay, phone polish.
+**Done:**
+- Day and night by real sunset in London, dark Mini Tokyo style glowing lanes, theme button, London clock.
+- Delay alerts from TfL service status: pill, halo on the line, TfL's reason text.
+- Replay: every poll recorded for 24 h, played back at 60x with a scrubber.
+- Phone polish: lighter map, bigger tap targets, no overlaps in the emulator.
+- Extras: Mini Tokyo style train panel with a timeline of stops; underground / surface / elevated styling; lanes for shared corridors; queued waiting trains.
+**Not done / limits:** replay is as long as the server has been running; not tried on a real phone; no DLR trains.
+**Next week:** Week 6 below.
 
 ## Week 6 — Demo, write-up, launch ⬜
 **Goal:** 30 s demo video, write-up on how arrival times become positions, publish. Second city after launch.
