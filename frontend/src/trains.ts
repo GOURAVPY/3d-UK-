@@ -16,6 +16,7 @@ import {
   type TrackIndex,
 } from "./tracks";
 import { liftDark } from "./daynight";
+import { PICK_PX } from "./device";
 
 // Each update says where a train is now and where it will be one poll later, as
 // distances along a run of real track. The browser slides every train along that
@@ -321,7 +322,7 @@ export function createTrainsLayer(index: TrackIndex) {
     pick(x: number, y: number): string | null {
       const now = performance.now();
       let best: string | null = null;
-      let bestD = 18;
+      let bestD = PICK_PX;
       for (const [id, g] of glides) {
         const p = placeOf(g, now);
         const [lon, lat] = fromLocal(p.x, p.y);

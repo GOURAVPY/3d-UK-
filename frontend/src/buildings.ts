@@ -1,4 +1,5 @@
 import type { Map } from "maplibre-gl";
+import { isSmallScreen } from "./device";
 
 // Replace the flat building fill with extruded 3D buildings. Taller buildings are shaded
 // differently so the skyline reads in 3D: pale grey by day, deep blue-grey at night.
@@ -9,7 +10,8 @@ export function add3dBuildings(map: Map, night: boolean) {
     type: "fill-extrusion",
     source: "openmaptiles",
     "source-layer": "building",
-    minzoom: 13,
+    // phones draw buildings only when close in, which is far fewer polygons
+    minzoom: isSmallScreen ? 14.5 : 13,
     paint: {
       "fill-extrusion-color": [
         "interpolate", ["linear"], ["coalesce", ["get", "render_height"], 8],
@@ -20,7 +22,7 @@ export function add3dBuildings(map: Map, night: boolean) {
       "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
       "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
       // building data only exists from zoom 13, so fade in rather than pop
-      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.8, night ? 0.92 : 0.85],
+      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], isSmallScreen ? 14.5 : 13, 0, isSmallScreen ? 15.3 : 13.8, night ? 0.92 : 0.85],
     },
   });
 }

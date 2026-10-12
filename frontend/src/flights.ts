@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { CustomLayerInterface, Map } from "maplibre-gl";
 import type { Flight } from "./types";
+import { PICK_PX } from "./device";
 import { METRE, ORIGIN, fromLocal, toLocal } from "./tracks";
 
 const MAX_PLANES = 1500;
@@ -244,7 +245,7 @@ export function createFlightsLayer() {
     pick(x: number, y: number): string | null {
       const now = performance.now();
       let best: string | null = null;
-      let bestD = 20;
+      let bestD = PICK_PX + 2;
       for (const [id, p] of planes) {
         const at = place(p, now);
         const [lon, lat] = fromLocal(at.x, at.y);

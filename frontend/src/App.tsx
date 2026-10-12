@@ -9,6 +9,7 @@ import { FlightPanel } from "./FlightPanel";
 import { StationPanel } from "./StationPanel";
 import { Tools } from "./Tools";
 import { TrainPanel } from "./TrainPanel";
+import { MAX_PIXEL_RATIO } from "./device";
 import { STYLE_DAY, STYLE_NIGHT, isNight, londonClock, type ThemeMode } from "./daynight";
 import { TrackIndex } from "./tracks";
 import { createTrainsLayer } from "./trains";
@@ -80,6 +81,7 @@ export function App() {
       container: container.current!,
       style: shownStyle.current,
       ...startView(),
+      pixelRatio: Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO),
       minZoom: 9.5,
       pitch: 55,
       bearing: -15,
