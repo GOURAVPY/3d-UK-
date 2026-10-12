@@ -53,3 +53,12 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 .board .dest { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
 .board .plat { color: #8aa; font-size: 11px; white-space: nowrap; }
 .board b { min-width: 44px; text-align: right; }
+/* keep the key and the panels from covering each other on short or narrow screens */
+.board ol { max-height: 32vh; }
+.key { max-height: 40vh; }
+@media (max-width: 640px) {
+  .key { display: none; }
+  .panel { left: 8px; right: 8px; width: auto; max-width: none; bottom: 8px; }
+  .tools { top: 84px; right: 8px; }
+  .counter { right: 8px; top: 8px; }
+}
