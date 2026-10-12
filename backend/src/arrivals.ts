@@ -42,6 +42,8 @@ export async function fetchTrains(lines: Line[]): Promise<Train[]> {
     const line = lines[i];
     const soonest = new Map<string, Prediction>();
     for (const p of r.value) {
+      // DLR predictions have no vehicleId, so those trains cannot be told apart
+      if (!p.vehicleId) continue;
       const key = p.vehicleId;
       const best = soonest.get(key);
       if (!best || p.timeToStation < best.timeToStation) soonest.set(key, p);
