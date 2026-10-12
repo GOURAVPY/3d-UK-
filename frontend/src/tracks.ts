@@ -28,8 +28,8 @@ export interface Chain {
 
 // Gap between neighbouring lanes: constant on screen when zoomed out, never tighter than
 // LANE_MIN_M when zoomed in. Mini Tokyo 3D scales its track spacing the same way.
-const LANE_PX = 12;
-const LANE_MIN_M = 14;
+const LANE_PX = 16;
+const LANE_MIN_M = 18;
 export function laneSpacingMetres(zoom: number): number {
   const mpp = (78271.517 * Math.cos((51.5 * Math.PI) / 180)) / 2 ** zoom;
   return Math.max(LANE_PX * mpp, LANE_MIN_M);

@@ -7,17 +7,23 @@ const AIRPORTS = [
 ];
 
 interface Props {
+  mode: "auto" | "day" | "night";
+  night: boolean;
+  onCycleMode: () => void;
   onFlyTo: (lon: number, lat: number) => void;
 }
 
 // Airport shortcuts and the list of public live streams.
-export function Tools({ onFlyTo }: Props) {
+export function Tools({ mode, night, onCycleMode, onFlyTo }: Props) {
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
   const playingStream = STREAMS.find((s) => s.id === playing);
 
   return (
     <div className="tools">
+      <button onClick={onCycleMode} title="Switch between automatic, day and night">
+        {night ? "🌙" : "☀️"} {mode === "auto" ? "Auto" : mode === "day" ? "Day" : "Night"}
+      </button>
       {AIRPORTS.map((a) => (
         <button key={a.name} onClick={() => onFlyTo(a.lon, a.lat)}>✈ {a.name}</button>
       ))}
