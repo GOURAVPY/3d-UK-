@@ -6,6 +6,7 @@ import {
   ORIGIN,
   fromLocal,
   laneAt,
+  levelAt,
   laneSpacingMetres,
   pointAt,
   project,
@@ -79,6 +80,10 @@ export function createTrainsLayer(index: TrackIndex) {
   let body: THREE.InstancedMesh;
   let windows: THREE.InstancedMesh;
   let skirt: THREE.InstancedMesh;
+  // underground trains are drawn as faint ghosts
+  let ghostBody: THREE.InstancedMesh;
+  let ghostWindows: THREE.InstancedMesh;
+  let ghostSkirt: THREE.InstancedMesh;
   let lights: THREE.InstancedMesh;
   const meshes: THREE.InstancedMesh[] = [];
   let selected: string | null = null;
@@ -93,6 +98,7 @@ export function createTrainsLayer(index: TrackIndex) {
     const mat = windows.material as THREE.MeshLambertMaterial;
     mat.color.set(night ? 0x2a2418 : 0x16222e);
     mat.emissive.set(night ? 0xffcf70 : 0x000000);
+    (ghostWindows.material as THREE.MeshBasicMaterial).color.set(night ? 0xffcf70 : 0x9fb4c8);
   };
 
   const slide = (g: Glide, now: number) => {
@@ -124,6 +130,11 @@ export function createTrainsLayer(index: TrackIndex) {
       body = make(carriageGeometry(), new THREE.MeshLambertMaterial({ color: 0xffffff }), MAX_TRAINS * CARS);
       windows = make(bandGeometry(), new THREE.MeshLambertMaterial({ color: 0x16222e }), MAX_TRAINS * CARS);
       skirt = make(bandGeometry(), new THREE.MeshLambertMaterial({ color: 0x2b2f33 }), MAX_TRAINS * CARS);
+      const ghost = (color: number, opacity: number) =>
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+      ghostBody = make(carriageGeometry(), ghost(0xffffff, 0.34), MAX_TRAINS * CARS);
+      ghostWindows = make(bandGeometry(), ghost(0x9fb4c8, 0.5), MAX_TRAINS * CARS);
+      ghostSkirt = make(bandGeometry(), ghost(0x2b2f33, 0.3), MAX_TRAINS * CARS);
       lights = make(bandGeometry(), new THREE.MeshBasicMaterial({ color: 0xffffff }), MAX_TRAINS * 2);
 
       ambient = new THREE.AmbientLight(0xffffff, 1.0);
@@ -144,6 +155,9 @@ export function createTrainsLayer(index: TrackIndex) {
 
       let trains = 0;
       let cars = 0;
+      let ghosts = 0;
+      // underground sits below the ground, elevated above it, by enough to see at any zoom
+      const levelHeight = Math.max(9, 6 * metresPerPx);
       let lamps = 0;
       for (const [id, g] of glides) {
         if (trains >= MAX_TRAINS) break;
@@ -188,26 +202,35 @@ export function createTrainsLayer(index: TrackIndex) {
           if (i === 0) firstPhi = phi;
           lastPhi = phi;
 
-          dummy.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 1);
+          const lv = levelAt(g.chain, centre);
+          const under = lv < -0.5;
+          const base = 1 + lv * levelHeight;
+          const bodyMesh = under ? ghostBody : body;
+          const windowMesh = under ? ghostWindows : windows;
+          const skirtMesh = under ? ghostSkirt : skirt;
+          const n = under ? ghosts : cars;
+
+          dummy.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, base);
           dummy.rotation.set(0, 0, phi);
 
           dummy.scale.set(w, Math.hypot(dx, dy), h);
           dummy.updateMatrix();
-          body.setMatrixAt(cars, dummy.matrix);
-          body.setColorAt(cars, tint);
+          bodyMesh.setMatrixAt(n, dummy.matrix);
+          bodyMesh.setColorAt(n, tint);
 
           // dark window band halfway up the side, a shade wider than the body
-          dummy.position.z = 1 + h * 0.5;
+          dummy.position.z = base + h * 0.5;
           dummy.scale.set(w * 1.02, Math.hypot(dx, dy) * 0.86, h * 0.28);
           dummy.updateMatrix();
-          windows.setMatrixAt(cars, dummy.matrix);
+          windowMesh.setMatrixAt(n, dummy.matrix);
 
           // dark skirt over the bottom of the body
-          dummy.position.z = 1;
+          dummy.position.z = base;
           dummy.scale.set(w * 1.02, Math.hypot(dx, dy), h * 0.16);
           dummy.updateMatrix();
-          skirt.setMatrixAt(cars, dummy.matrix);
-          cars++;
+          skirtMesh.setMatrixAt(n, dummy.matrix);
+          if (under) ghosts++;
+          else cars++;
         }
 
         // bright headlight on the front, red tail light on the back
@@ -215,12 +238,14 @@ export function createTrainsLayer(index: TrackIndex) {
           [s + length / 2 + 0.3, HEADLIGHT, lastPhi],
           [s - length / 2 - 0.3, TAILLIGHT, firstPhi],
         ] as const) {
+          const endLevel = levelAt(g.chain, end);
+          if (endLevel < -0.5) continue; // no bright lights on a ghost train underground
           pointAt(g.chain, end, a);
           const n = phi === lastPhi && end > s ? headN : tailN;
           const side = (laneAt(g.chain, end) + KEEP_LEFT) * spacing;
           a[0] += n[0] * side;
           a[1] += n[1] * side;
-          dummy.position.set(a[0], a[1], 1 + h * 0.3);
+          dummy.position.set(a[0], a[1], 1 + endLevel * levelHeight + h * 0.3);
           dummy.rotation.set(0, 0, phi);
           dummy.scale.set(w * 0.6, Math.max(0.3, length * 0.012), h * 0.2);
           dummy.updateMatrix();
@@ -230,6 +255,7 @@ export function createTrainsLayer(index: TrackIndex) {
         }
       }
       body.count = windows.count = skirt.count = cars;
+      ghostBody.count = ghostWindows.count = ghostSkirt.count = ghosts;
       lights.count = lamps;
       for (const m of meshes) {
         m.instanceMatrix.needsUpdate = true;
