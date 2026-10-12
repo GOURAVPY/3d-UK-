@@ -54,3 +54,18 @@ export interface Departure {
   seconds: number;
   currentLocation: string;
 }
+
+export interface Flight {
+  id: string;
+  callsign: string;
+  type: string;
+  reg: string;
+  lat: number;
+  lon: number;
+  altM: number;
+  onGround: boolean;
+  speedMs: number;
+  track: number;
+  climbMs: number;
+  roll: number;
+}
