@@ -364,3 +364,31 @@ Trains whose next arrival is far off were parked at the station they had just le
 - Station panel shows them above the live board, collapsible; `?station=<naptanId>` opens one directly.
 - Panel and line key heights capped so the station name is never hidden.
 - `docs/DATA-SOURCES.md` lists every API with measured sizes and field counts.
+
+## 2026-10-12 — Train duplication and aircraft checks
+
+### Train duplication (reported with a screenshot of a long chain of red carriages)
+**Measured first.** Same-line train pairs within 70 m of each other: 1,675 in a feed of 749 trains. By line: Elizabeth 658, Windrush 370, Mildmay 265, Weaver 213; every tube line under 15.
+
+**Cause.** The Elizabeth line and the Overground lines list timetable entries for trips that are not running, as ordinary vehicles:
+1. Trips whose next stop is up to two hours away (47 of 117 Elizabeth trains were over 40 minutes away). They piled up at the stations.
+2. Trips with a leftover first prediction. Vehicle 202610126737555 said "Heathrow Terminal 4 in 9 s" and its next stop was 39 minutes later; eight different trips all said "T4 in 3 s".
+
+**Fix** in `arrivals.ts`: drop a vehicle whose next stop is more than 15 minutes away, and one whose following stop is more than 20 minutes after its first. Tube lines are unaffected (their next stop is always under 5 minutes).
+
+| | Before | After |
+|---|---|---|
+| Trains | 749 | about 500 |
+| Elizabeth line | 117 | 39 |
+| Same-line pairs within 70 m | 1,675 | 58 (opposite directions at one platform) |
+
+### Aircraft
+Checked 161 aircraft for duplicates and bad data. Found:
+- 14 positions were 30 to 60 s old and were being treated as fresh; at 250 m/s that is up to 15 km behind. The server now moves each report forward by its `seen_pos` age along its track and climb rate.
+- 7 records were category C (airport service vehicles) drawn as airliners; now excluded.
+- Helicopters (category A7) were drawn 38 m long; now 14 m.
+- No duplicate hex codes, no negative or impossible altitudes, and no two airborne aircraft within 60 m of each other.
+
+### Known limits
+- A genuine layover train that waits more than 20 minutes at a terminus is also hidden.
+- The DLR still has no trains.

@@ -6,7 +6,7 @@ Counts measured on 2026-10-12 by calling each API once.
 
 | Source | Endpoint | What it gives | Size now | Fields | We use | How often |
 |---|---|---|---|---|---|---|
-| TfL | `/Line/{id}/Arrivals` | Arrival predictions: which train, next stop, seconds to arrive, platform, "Between X and Y" | ~700 trains from 19 requests | 19 per prediction | 9 | every 30 s (19 requests) |
+| TfL | `/Line/{id}/Arrivals` | Arrival predictions: which train, next stop, seconds to arrive, platform, "Between X and Y" | ~500 running trains from ~1,700 vehicle entries, 19 requests | 19 per prediction | 9 | every 30 s (19 requests) |
 | TfL | `/Line/Mode/.../Status` | Service status of every line, with TfL's reason text | 19 lines | 10 + 5 per status | 4 | every 2 min |
 | TfL | `/StopPoint/{id}/Arrivals` | Departures board of one station | ~40 predictions at Waterloo | 20 per prediction | 7 | when you open a station, cached 15 s |
 | TfL | `/StopPoint/{id}` | Station details: zone, address, phone, facilities, lines, modes | 34 properties, 8 child stops (Waterloo) | 16 top-level | 8 | when you open a station, cached 1 h |
@@ -33,3 +33,7 @@ TfL request rate: 19 requests per 30 s for trains (about 38 per minute) plus sta
 
 ## What the app shows you
 Trains (~700), stations (470), lines (19), aircraft (~165), service status per line, a live board per station, a timeline of upcoming stops per train, and station facts (zone, lines, other modes, facilities, address).
+
+## Filters we apply to the live feeds
+- **Trains:** a vehicle is shown only if its next stop is under 15 minutes away and its following stop is under 20 minutes after that; otherwise it is a timetable entry, not a train. This removed about a third of the raw vehicles (almost all on the Elizabeth and Overground lines).
+- **Aircraft:** ground vehicles (category C) are removed, and reports up to a minute old are moved forward to where the aircraft is now.
