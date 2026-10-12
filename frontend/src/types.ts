@@ -38,3 +38,13 @@ export interface Stream {
   lat?: number;
   lon?: number;
 }
+
+export interface Departure {
+  lineId: string;
+  lineName: string;
+  colour: string;
+  destination: string;
+  platform: string;
+  seconds: number;
+  currentLocation: string;
+}
