@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Train } from "./types";
 import { minutes, shortName } from "./format";
+import { Icon } from "./ui/Icon";
 
 interface Stop {
   id: string;
@@ -60,9 +61,11 @@ export function TrainPanel({ train, following, onFollow, onClose }: Props) {
           </span>
         </div>
         <button className="chev" onClick={() => setOpen((o) => !o)} aria-label={open ? "Hide stops" : "Show stops"}>
-          {open ? "⌃" : "⌄"}
+          <Icon name={open ? "up" : "down"} size={18} />
         </button>
-        <button className="chev" onClick={onClose} aria-label="Close">×</button>
+        <button className="chev" onClick={onClose} aria-label="Close">
+          <Icon name="x" size={18} />
+        </button>
       </div>
 
       {open && (
@@ -84,7 +87,8 @@ export function TrainPanel({ train, following, onFollow, onClose }: Props) {
 
       <div className="row">
         <button className={following ? "on" : ""} onClick={onFollow}>
-          {following ? "Stop following" : "Follow this train"}
+          <Icon name="target" size={16} />
+          {following ? "Stop following" : "Follow"}
         </button>
         <small>{train.currentLocation || "Position estimated from arrival times"}</small>
       </div>

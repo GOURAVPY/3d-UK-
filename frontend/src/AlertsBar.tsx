@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { LineStatus } from "./types";
+import { Icon } from "./ui/Icon";
 
 // A small pill that appears only when something is wrong, and opens into TfL's own words.
 export function AlertsBar({ status }: { status: LineStatus[] }) {
@@ -11,7 +12,9 @@ export function AlertsBar({ status }: { status: LineStatus[] }) {
   return (
     <div className={`alerts ${severe ? "severe" : ""}`}>
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        ⚠ {bad.length} {bad.length === 1 ? "line" : "lines"} with {severe ? "severe " : ""}delays {open ? "▴" : "▾"}
+        <Icon name="alert" size={16} />
+        {bad.length} {bad.length === 1 ? "line" : "lines"} with {severe ? "severe " : ""}delays
+        <Icon name={open ? "up" : "down"} size={14} />
       </button>
       {open && (
         <ul>

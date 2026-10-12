@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Line, Train } from "./types";
+import { Icon } from "./ui/Icon";
 
 interface Info {
   from: number | null;
@@ -227,7 +228,7 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
       ) : (
         <>
           <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
-            {playing ? "⏸" : "▶"}
+            <Icon name={playing ? "pause" : "play"} size={18} />
           </button>
           <input
             type="range"
@@ -247,9 +248,13 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
             <button className="link" onClick={openEditor}>Edit date &amp; time</button>
           </div>
           <div className="speed" aria-label="Playback speed">
-            <button onClick={() => setSpeed((s) => stepSpeed(s, -1))} aria-label="Slower">−</button>
+            <button onClick={() => setSpeed((s) => stepSpeed(s, -1))} aria-label="Slower">
+              <Icon name="minus" size={14} />
+            </button>
             <span>{speed}×</span>
-            <button onClick={() => setSpeed((s) => stepSpeed(s, 1))} aria-label="Faster">+</button>
+            <button onClick={() => setSpeed((s) => stepSpeed(s, 1))} aria-label="Faster">
+              <Icon name="plus" size={14} />
+            </button>
           </div>
           <button onClick={onClose}>Live</button>
         </>

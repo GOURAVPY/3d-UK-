@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Departure } from "./types";
 import { minutes, shortName } from "./format";
+import { Icon } from "./ui/Icon";
 
 interface Details {
   id: string;
@@ -103,7 +104,9 @@ export function StationPanel({ stationId, name, onClose }: Props) {
 
   return (
     <div className="panel board">
-      <button className="close" onClick={onClose} aria-label="Close">×</button>
+      <button className="close" onClick={onClose} aria-label="Close">
+        <Icon name="x" size={18} />
+      </button>
       <h3>
         {shortName(details?.name ?? name)}
         {details?.zone && <span className="zone">Zone {details.zone}</span>}
@@ -112,7 +115,8 @@ export function StationPanel({ stationId, name, onClose }: Props) {
       {details && (
         <div className="info">
           <button className="more" onClick={() => setShowInfo((s) => !s)}>
-            {showInfo ? "Hide details ▴" : "Station details ▾"}
+            {showInfo ? "Hide details" : "Station details"}
+            <Icon name={showInfo ? "up" : "down"} size={14} />
           </button>
           {showInfo && (
             <>

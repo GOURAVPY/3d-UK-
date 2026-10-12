@@ -1,4 +1,5 @@
 import type { Flight } from "./types";
+import { Icon } from "./ui/Icon";
 
 const TYPE_NAMES: Record<string, string> = {
   A320: "Airbus A320", A20N: "Airbus A320neo", A319: "Airbus A319", A321: "Airbus A321", A21N: "Airbus A321neo",
@@ -22,8 +23,13 @@ export function FlightPanel({ flight, following, onFollow, onClose }: Props) {
   const climbing = flight.climbMs > 1 ? "climbing" : flight.climbMs < -1 ? "descending" : "level";
   return (
     <div className="panel">
-      <button className="close" onClick={onClose} aria-label="Close">×</button>
-      <h3>✈ {flight.callsign || flight.id.toUpperCase()}</h3>
+      <button className="close" onClick={onClose} aria-label="Close">
+        <Icon name="x" size={18} />
+      </button>
+      <h3>
+        <Icon name="plane" size={18} />
+        {flight.callsign || flight.id.toUpperCase()}
+      </h3>
       <dl>
         <dt>Aircraft</dt>
         <dd>{TYPE_NAMES[flight.type] ?? (flight.type || "Unknown")}</dd>
@@ -38,7 +44,8 @@ export function FlightPanel({ flight, following, onFollow, onClose }: Props) {
       </dl>
       <div className="row">
         <button className={following ? "on" : ""} onClick={onFollow}>
-          {following ? "Stop following" : "Follow this aircraft"}
+          <Icon name="target" size={16} />
+          {following ? "Stop following" : "Follow"}
         </button>
         <small>Live ADS-B data from adsb.lol</small>
       </div>

@@ -8,10 +8,12 @@ import { createFlightsLayer } from "./flights";
 import { FlightPanel } from "./FlightPanel";
 import { ReplayBar } from "./ReplayBar";
 import { StationPanel } from "./StationPanel";
-import { Tools } from "./Tools";
+import { Hud } from "./ui/Hud";
+import { Legend } from "./ui/Legend";
+import { Toolbar } from "./ui/Toolbar";
 import { TrainPanel } from "./TrainPanel";
 import { MAX_PIXEL_RATIO } from "./device";
-import { STYLE_DAY, STYLE_NIGHT, isNight, londonClock, type ThemeMode } from "./daynight";
+import { STYLE_DAY, STYLE_NIGHT, isNight, type ThemeMode } from "./daynight";
 import { TrackIndex } from "./tracks";
 import { addUndergroundLayers, setUndergroundMode } from "./underground";
 import { createTrainsLayer } from "./trains";
@@ -196,6 +198,11 @@ export function App() {
     if (ready && mapRef.current) setAlerts(mapRef.current, status);
   }, [ready, status, styleVersion]);
 
+  // The interface follows the map: light cards by day, dark glass at night.
+  useEffect(() => {
+    document.documentElement.dataset.theme = night ? "night" : "day";
+  }, [night]);
+
   // Underground Mode: the city fades, the layout and tunnels come forward.
   useEffect(() => {
     if (!ready || !mapRef.current) return;
@@ -333,12 +340,9 @@ export function App() {
   return (
     <>
       <div ref={container} className="map" />
-      <div className="counter">
-        <b>{trains.length}</b> trains running now
-        <small>London {londonClock(now)}{updatedAt && ` · updated ${updatedAt.toLocaleTimeString("en-GB")}`}</small>
-      </div>
+      <Hud trains={trains.length} aircraft={flights.length} now={now} updatedAt={updatedAt} playback={replay} />
       <AlertsBar status={status} />
-      <Tools
+      <Toolbar
         mode={mode}
         night={night}
         eco={eco}
@@ -375,11 +379,7 @@ export function App() {
         <StationPanel stationId={station.id} name={station.name} onClose={() => setStation(null)} />
       )}
       {replay && <ReplayBar lines={lines} onFrame={showReplayFrame} onClose={toggleReplay} />}
-      <div className="key">
-        {lines.map((l) => (
-          <div key={l.id}><i style={{ background: l.colour }} />{l.name}</div>
-        ))}
-      </div>
+      <Legend lines={lines} status={status} />
     </>
   );
 }
