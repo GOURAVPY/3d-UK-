@@ -260,7 +260,7 @@ export function createTrainsLayer(index: TrackIndex) {
       const now = performance.now();
       const next = new globalThis.Map<string, Glide>();
       for (const t of trains) {
-        const built = t.ids.length >= 2 ? index.chain(t.ids) : null;
+        const built = t.ids.length >= 2 ? index.chain(t.lineId, t.ids) : null;
         let chain: Chain;
         let fromS = 0;
         let toS = 0;

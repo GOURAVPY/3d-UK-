@@ -94,7 +94,7 @@ export class TrackIndex {
 
   constructor(
     private stations: Map<string, [number, number]>, // id -> [lon, lat]
-    private shapes: Record<string, [number, number][]>, // "a|b" (a < b) -> lon/lat polyline
+    private shapes: Record<string, [number, number][]>, // "lineId|a|b" (a < b) -> lon/lat polyline
   ) {}
 
   stationLocal(id: string): [number, number] | null {
@@ -103,25 +103,25 @@ export class TrackIndex {
   }
 
   // Polyline from station a to station b in local metres (straight if no shape is known).
-  private link(a: string, b: string): [number, number][] | null {
+  private link(lineId: string, a: string, b: string): [number, number][] | null {
     const pa = this.stations.get(a);
     const pb = this.stations.get(b);
     if (!pa || !pb) return null;
     const forward = a < b;
-    const shape = this.shapes[forward ? `${a}|${b}` : `${b}|${a}`];
+    const shape = this.shapes[forward ? `${lineId}|${a}|${b}` : `${lineId}|${b}|${a}`];
     const lonlat = shape ? (forward ? shape : [...shape].reverse()) : [pa, pb];
     return lonlat.map(([lon, lat]) => toLocal(lon, lat));
   }
 
   // Chain through the stations in order. offsets[i] is the distance at which station i sits.
-  chain(ids: string[]): { chain: Chain; offsets: number[] } | null {
-    const key = ids.join("|");
+  chain(lineId: string, ids: string[]): { chain: Chain; offsets: number[] } | null {
+    const key = `${lineId}|${ids.join("|")}`;
     if (this.cache.has(key)) return this.cache.get(key)!;
     const points: [number, number][] = [];
     const offsets: number[] = [0];
     let ok = ids.length >= 2;
     for (let i = 0; ok && i < ids.length - 1; i++) {
-      const seg = this.link(ids[i], ids[i + 1]);
+      const seg = this.link(lineId, ids[i], ids[i + 1]);
       if (!seg) {
         ok = false;
         break;
