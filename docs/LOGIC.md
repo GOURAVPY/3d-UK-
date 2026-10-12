@@ -27,7 +27,7 @@ TfL gives arrival predictions, not GPS, so we estimate. Every 30 s:
 5. Remaining distance = min(timeToStation x speed, track length).
 6. Position = point on the track that far behind the next stop. Speed is a per-mode guess (tube 11, DLR 9, Elizabeth 17, Overground 14 m/s).
 7. Do the same with `timeToStation - 30` for where the train will be one poll later.
-8. Send the station chain (before, from, to, after) and the distances d0 and d1 along the from-to link, plus the heading. The browser builds one run of real track from the chain, slides the train along it over 30 s, and places each of the six carriages on its own stretch of that track, so the train bends round curves (`frontend/src/tracks.ts`, `frontend/src/trains.ts`).
+8. Send the station chain (before, from, to, after) and the distances d0 and d1 along the from-to link, plus the heading. The browser builds one run of real track from the chain (cutting any overshoot where two links join), slides the train along it over 30 s, and places each of the six carriages on its own stretch of that track, so the train bends round curves (`frontend/src/tracks.ts`, `frontend/src/trains.ts`).
 
 Edge cases still open: dwell time at stations, trains with a far-off next stop sit at the previous station, branches with two possible previous stations (name hint used), 429 rate limit (back off), no DLR vehicle ids.
 
@@ -35,11 +35,7 @@ Edge cases still open: dwell time at stations, trains with a far-off next stop s
 Third-party streams are a static list in `frontend/src/data/streams.ts`, not part of the TfL data flow. Entries link out, or embed in the page when a `youtubeId` is set. Street traffic cameras were removed.
 
 ## Track data pipeline (offline, run once)
-1. `node scripts/fetch-osm.mjs` downloads London rail ways from Overpass to `data/raw/osm-rail.json` (git-ignored).
-2. `npx tsx scripts/build-tracks.ts` routes every TfL station link over that graph and writes `data/tracks.json`.
-3. The server reads `data/tracks.json` at startup. Re-run when TfL adds stations.
-
-## Interaction (Week 4)
-- **Picking:** the 3D layer keeps every train's drawn position. On click, each is projected to the screen with `map.project` and the nearest within 18 px wins. Otherwise the click is tested against station dots.
-- **Follow:** `requestAnimationFrame` loop sets the map centre to the selected train's drawn position and eases bearing, zoom and pitch.
-- **Departures:** browser asks `/api/stations/:id/arrivals`; server asks TfL `/StopPoint/{id}/Arrivals`, sorts by time, keeps 14 rows, caches 15 s.
+1. `node scripts/fetch-osm-lines.mjs` downloads each line's OpenStreetMap route relations to `data/raw/osm-lines.json` (git-ignored). `node scripts/fetch-osm.mjs` downloads all London rail ways as a fallback for lines without a relation.
+2. `npx tsx scripts/build-tracks.ts` builds one graph per line from that line's own ways and routes every station link with A*, writing `data/tracks.json` keyed `lineId|stationA|stationB`. A station keeps one track node shared by the links either side of it.
+3. `npx tsx scripts/check-joins.ts` reports how far apart link ends are at stations; `node scripts/check-kinks.mjs` (server running) reports the sharpest bend under each live train.
+4. The server reads `data/tracks.json` at startup and serves it at `/api/tracks`. Re-run when TfL adds stations.
