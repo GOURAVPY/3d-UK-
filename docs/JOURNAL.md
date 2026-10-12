@@ -100,7 +100,7 @@ Week 3: estimate each train's position between stations and animate smoothly.
 ### Next
 Week 4: click a train for details, follow camera, station departures board.
 
-## 2026-10-12 — Day 3, later: live cameras (extra)
+## 2026-10-12 — Day 3, later: live cameras (extra, street cams removed)
 
 ### What we did
 - Asked for live CCTV of trains and airports. Train/platform and terminal CCTV is private and not published by TfL, Network Rail or airports, so it is not possible.
@@ -122,3 +122,8 @@ Week 4: click a train for details, follow camera, station departures board.
 ### Known limits
 - JamCams show roads near stations and airports, not the stations or platforms.
 - Third-party streams are unofficial and can go offline.
+
+### Update: street cameras removed
+- Decision: street traffic cameras (TfL JamCams) removed at the owner's request. Deleted `backend/src/cameras.ts`, `/api/cameras`, the camera layer, panel, toggle and styles.
+- Kept: airport shortcuts (Heathrow, London City) and the public live streams list.
+- Fix found while cleaning up: `socket.io-client` was missing from the committed `frontend/package.json` since Week 2. Now committed, so a fresh clone builds.
