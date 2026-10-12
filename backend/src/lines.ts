@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { LINE_COLOURS } from "./lineColours.js";
 import { tfl } from "./tfl.js";
 
@@ -53,4 +54,27 @@ async function loadLine(id: string, name: string, mode: string): Promise<Line> {
 export async function loadAllLines(): Promise<Line[]> {
   const list = await tfl<{ id: string; name: string; modeName: string }[]>(`/Line/Mode/${MODES}`);
   return Promise.all(list.map((l) => loadLine(l.id, l.name, l.modeName)));
+}
+
+// Real track shapes built by scripts/build-tracks.ts. Without the file we keep TfL's coarse paths.
+export function applyTracks(lines: Line[], file = "data/tracks.json"): number {
+  if (!existsSync(file)) return 0;
+  const tracks = JSON.parse(readFileSync(file, "utf8")) as Record<string, LngLat[]>;
+  let used = 0;
+  for (const line of lines) {
+    const at = new Map(line.stations.map((s) => [s.id, [s.lon, s.lat] as LngLat]));
+    const paths: LngLat[][] = [];
+    for (const [x, y] of line.links) {
+      const key = x < y ? `${x}|${y}` : `${y}|${x}`;
+      const geom = tracks[key];
+      if (geom) {
+        paths.push(x < y ? geom : [...geom].reverse());
+        used++;
+      } else if (at.has(x) && at.has(y)) {
+        paths.push([at.get(x)!, at.get(y)!]);
+      }
+    }
+    if (paths.length) line.paths = paths;
+  }
+  return used;
 }
