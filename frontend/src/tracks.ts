@@ -24,6 +24,9 @@ export interface Chain {
   // lane offset (lane units, to the left of travel) at distances laneS along the chain
   laneS: number[];
   laneV: number[];
+  // -1 underground, 0 surface, 1 elevated, at distances levS along the chain
+  levS: number[];
+  levV: number[];
 }
 
 // Gap between neighbouring lanes: constant on screen when zoomed out, never tighter than
@@ -35,21 +38,31 @@ export function laneSpacingMetres(zoom: number): number {
   return Math.max(LANE_PX * mpp, LANE_MIN_M);
 }
 
-// Lane value at `s` metres along the chain (linear between the control points).
-export function laneAt(c: Chain, s: number): number {
-  const n = c.laneS.length;
-  if (n === 1 || s <= c.laneS[0]) return c.laneV[0];
-  if (s >= c.laneS[n - 1]) return c.laneV[n - 1];
+// Linear interpolation of a profile (values V at distances S) at `s`.
+function profileAt(S: number[], V: number[], s: number): number {
+  const n = S.length;
+  if (n === 1 || s <= S[0]) return V[0];
+  if (s >= S[n - 1]) return V[n - 1];
   let lo = 1;
   let hi = n - 1;
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if (c.laneS[mid] < s) lo = mid + 1;
+    if (S[mid] < s) lo = mid + 1;
     else hi = mid;
   }
-  const span = c.laneS[lo] - c.laneS[lo - 1];
-  const f = span > 0 ? (s - c.laneS[lo - 1]) / span : 1;
-  return c.laneV[lo - 1] + (c.laneV[lo] - c.laneV[lo - 1]) * f;
+  const span = S[lo] - S[lo - 1];
+  const f = span > 0 ? (s - S[lo - 1]) / span : 1;
+  return V[lo - 1] + (V[lo] - V[lo - 1]) * f;
+}
+
+// Lane value at `s` metres along the chain.
+export function laneAt(c: Chain, s: number): number {
+  return profileAt(c.laneS, c.laneV, s);
+}
+
+// -1 underground, 0 surface, 1 elevated at `s` metres along the chain (eased between).
+export function levelAt(c: Chain, s: number): number {
+  return profileAt(c.levS, c.levV, s);
 }
 
 function makeChain(points: [number, number][]): Chain {
@@ -62,7 +75,7 @@ function makeChain(points: [number, number][]): Chain {
     x.push(px);
     y.push(py);
   }
-  return { x, y, cum, length: cum[cum.length - 1], laneS: [0], laneV: [0] };
+  return { x, y, cum, length: cum[cum.length - 1], laneS: [0], laneV: [0], levS: [0], levV: [0] };
 }
 
 // Two points `ahead` metres apart, pointing along a compass heading: a tiny stub of track
@@ -125,7 +138,19 @@ export class TrackIndex {
     private stations: Map<string, [number, number]>, // id -> [lon, lat]
     private shapes: Record<string, [number, number][]>, // "lineId|a|b" (a < b) -> lon/lat polyline
     private lanes: Record<string, number> = {}, // same keys -> lane offset left of a to b
+    private levels: Record<string, [number, number][]> = {}, // same keys -> [[metres, level], ...]
   ) {}
+
+  // Level runs of a link in the direction of travel from station a to station b:
+  // [from, to, level] in metres along that link, level -1 underground, 0 surface, 1 elevated.
+  private runs(lineId: string, a: string, b: string, length: number): [number, number, number][] {
+    const forward = a < b;
+    const raw = this.levels[forward ? `${lineId}|${a}|${b}` : `${lineId}|${b}|${a}`];
+    if (!raw) return [[0, length, 0]];
+    const runs = raw.map(([s, lv], i) => [s, i + 1 < raw.length ? raw[i + 1][0] : length, lv] as [number, number, number]);
+    if (forward) return runs;
+    return runs.map(([s, e, lv]) => [length - e, length - s, lv] as [number, number, number]).reverse();
+  }
 
   // Lane offset, to the left of travel, when going from station a to station b on a line.
   private lane(lineId: string, a: string, b: string): number {
@@ -197,6 +222,33 @@ export class TrackIndex {
       }
       chain.laneS.shift();
       chain.laneV.shift();
+
+      // underground / surface / elevated along the whole chain, eased over 35 m each side
+      const RAMP = 35;
+      const segs: [number, number, number][] = [];
+      for (let i = 0; i < n; i++) {
+        const s0 = chain.cum[starts[i]];
+        const s1 = i + 1 < n ? chain.cum[starts[i + 1]] : chain.length;
+        const [x, y] = [ids[i], ids[i + 1]];
+        for (const [from, to, lv] of this.runs(lineId, x, y, s1 - s0)) {
+          const last = segs[segs.length - 1];
+          if (last && last[2] === lv && Math.abs(last[1] - (s0 + from)) < 1) last[1] = s0 + to;
+          else segs.push([s0 + from, s0 + to, lv]);
+        }
+      }
+      chain.levS = [];
+      chain.levV = [];
+      segs.forEach(([from, to, lv], i) => {
+        let p0 = from + (i === 0 ? 0 : RAMP);
+        let p1 = to - (i === segs.length - 1 ? 0 : RAMP);
+        if (p1 < p0) p0 = p1 = (from + to) / 2;
+        chain.levS.push(p0, p1);
+        chain.levV.push(lv, lv);
+      });
+      if (!chain.levS.length) {
+        chain.levS = [0];
+        chain.levV = [0];
+      }
       result = { chain, offsets: [...starts.map((i) => chain.cum[i]), chain.length] };
     }
     this.cache.set(key, result);
@@ -212,7 +264,7 @@ export class TrackIndex {
     type: "FeatureCollection";
     features: {
       type: "Feature";
-      properties: { colour: string; line: string };
+      properties: { colour: string; line: string; level: number };
       geometry: { type: "LineString"; coordinates: [number, number][] };
     }[];
   } {
@@ -264,11 +316,32 @@ export class TrackIndex {
           const len = Math.hypot(tx, ty) || 1;
           return fromLocal(x - (ty / len) * v * spacingM, y + (tx / len) * v * spacingM);
         });
-        features.push({
-          type: "Feature",
-          properties: { colour: line.colour, line: line.id },
-          geometry: { type: "LineString", coordinates: coords },
+        // one feature per stretch, so underground and elevated track can be styled apart
+        const runs = this.runs(line.id, l.a, l.b, c.length);
+        const levelAt = (d: number) => (runs.find(([from, to]) => d >= from && d <= to) ?? runs[runs.length - 1])[2];
+        let piece: [number, number][] = [];
+        let current = levelAt(0);
+        const flush = () => {
+          if (piece.length > 1) {
+            features.push({
+              type: "Feature",
+              properties: { colour: line.colour, line: line.id, level: current },
+              geometry: { type: "LineString", coordinates: piece },
+            });
+          }
+        };
+        coords.forEach((pt, k) => {
+          const lv = levelAt(c.cum[k]);
+          if (lv !== current) {
+            piece.push(pt); // the join belongs to both stretches
+            flush();
+            piece = [pt];
+            current = lv;
+          } else {
+            piece.push(pt);
+          }
         });
+        flush();
       });
     }
     return { type: "FeatureCollection", features };
