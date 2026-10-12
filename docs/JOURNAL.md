@@ -67,3 +67,35 @@ Week 2: 3D buildings, server polls arrivals every 30 s, trains as dots at statio
 
 ### Next
 Week 3: estimate each train's position between stations and animate smoothly.
+
+## 2026-10-12 — Day 3 (Week 3)
+
+### What we did
+- Backend: each line now keeps ordered neighbour links (`links`) from TfL's stop sequences.
+- New `geo.ts` (distance, track length, point along a track) and `positioning.ts` (`LineTracks`).
+- For each train: next stop = soonest prediction; station behind it = the neighbour of the next stop that is not the stop after it; track = shortest stretch of any line path touching both; position = next stop minus `timeToStation x speed`, capped at the track length.
+- Server sends two points per train: where it is now and where it will be in 30 s.
+- Frontend: `trains.ts` glides each train from its drawn position to its target over 30 s, redrawn every animation frame. New data starts from the drawn spot, so nothing jumps.
+
+### Results (first measured poll)
+- 807 trains: 507 moving, 300 waiting at a station, 0 left stuck on their next station.
+- Median movement 330 m per 30 s.
+
+### Problems and fixes
+| Problem | Cause | Fix |
+|---|---|---|
+| 46 trains stuck on their next station | At a terminus the stop after the next is the same neighbour the train came from, so excluding it left no previous station | If excluding leaves none, keep that neighbour |
+| `currentLocation` empty for Elizabeth/Overground | TfL leaves it blank there | Do not rely on the text. Use stop order from the stop sequences |
+
+### Decisions
+- Average speed is a guess per mode: tube 11, DLR 9, Elizabeth 17, Overground 14 m/s. Tune in `positioning.ts`.
+- Track is cut from the line paths where a path touches both stations. Otherwise a straight line is used.
+- Updating the map source each frame is fine for about 800 trains. Move to an `InstancedMesh` if it gets slow.
+
+### Known limits
+- Positions are estimates, not GPS. Dwell time at stations is not modelled, so some trains wait at the previous station until their arrival gets close.
+- Trains whose next stop is far away are placed at the previous station.
+- Still no DLR.
+
+### Next
+Week 4: click a train for details, follow camera, station departures board.
