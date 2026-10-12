@@ -1,5 +1,13 @@
+import { useEffect, useState } from "react";
 import type { Train } from "./types";
 import { minutes, shortName } from "./format";
+
+interface Stop {
+  id: string;
+  name: string;
+  seconds: number;
+  expectedArrival: string;
+}
 
 interface Props {
   train: Train;
@@ -8,37 +16,77 @@ interface Props {
   onClose: () => void;
 }
 
-// Details of one clicked train, with a Follow button.
+const clock = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit" });
+
+// Upcoming stops of one train; asked for when it is selected and refreshed with each poll.
+function useStops(trainId: string) {
+  const [stops, setStops] = useState<Stop[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setStops(null);
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/trains/${encodeURIComponent(trainId)}/stops`);
+        if (res.ok && alive) setStops(await res.json());
+      } catch {
+        /* keep the last list */
+      }
+    };
+    load();
+    const timer = setInterval(load, 15_000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [trainId]);
+  return stops;
+}
+
+// One clicked train: its line, where it is going, and a timeline of the stops ahead.
 export function TrainPanel({ train, following, onFollow, onClose }: Props) {
-  const arrive = new Date(train.expectedArrival).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const stops = useStops(train.id);
+  const [open, setOpen] = useState(true);
+  const destination = shortName(train.destination) || shortName(train.nextStation);
+
   return (
-    <div className="panel">
-      <button className="close" onClick={onClose} aria-label="Close">×</button>
-      <h3><i className="dot" style={{ background: train.colour }} />{train.lineName} line</h3>
-      <dl>
-        <dt>Destination</dt>
-        <dd>{shortName(train.destination) || "Not shown"}</dd>
-        <dt>Next station</dt>
-        <dd>{shortName(train.nextStation)}</dd>
-        <dt>Arrives</dt>
-        <dd>{arrive} · {minutes(train.secondsToNext)}</dd>
-        <dt>Platform</dt>
-        <dd>{train.platform || "Not shown"}</dd>
-        {train.currentLocation && (
-          <>
-            <dt>Now</dt>
-            <dd>{train.currentLocation}</dd>
-          </>
-        )}
-      </dl>
+    <div className="panel train" style={{ ["--line" as string]: train.colour }}>
+      <div className="train-head">
+        <i className="bar" />
+        <div className="title">
+          <b>{train.lineName}{/line$/i.test(train.lineName) ? "" : " line"}</b>
+          <span>
+            <mark>{train.platform.split(" - ")[0] || "Train"}</mark> for {destination}
+          </span>
+        </div>
+        <button className="chev" onClick={() => setOpen((o) => !o)} aria-label={open ? "Hide stops" : "Show stops"}>
+          {open ? "⌃" : "⌄"}
+        </button>
+        <button className="chev" onClick={onClose} aria-label="Close">×</button>
+      </div>
+
+      {open && (
+        <ol className="stops">
+          {stops === null && <li className="muted">Loading stops…</li>}
+          {stops?.length === 0 && <li className="muted">No stops listed.</li>}
+          {stops?.map((s, i) => (
+            <li key={s.id} className={i === 0 ? "next" : ""}>
+              <i className="pip" />
+              <span className="name">{shortName(s.name)}</span>
+              <span className="when">
+                {clock(s.expectedArrival)}
+                <small>{minutes(s.seconds)}</small>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+
       <div className="row">
         <button className={following ? "on" : ""} onClick={onFollow}>
           {following ? "Stop following" : "Follow this train"}
         </button>
-        <small>Position is estimated from arrival times</small>
+        <small>{train.currentLocation || "Position estimated from arrival times"}</small>
       </div>
     </div>
   );

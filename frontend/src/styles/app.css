@@ -64,3 +64,29 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 }
 .board ol { padding-right: 10px; scrollbar-width: thin; }
 .board b { white-space: nowrap; }
+/* Train panel: a coloured line bar and a timeline of the stops ahead, like Mini Tokyo 3D */
+.panel.train { background: rgba(16, 17, 22, 0.95); color: #fff; padding: 0; width: 340px; overflow: hidden; }
+.train-head { display: flex; align-items: center; gap: 10px; padding: 10px 8px 8px 0; }
+.train-head .bar { align-self: stretch; width: 6px; background: var(--line); flex: none; border-radius: 0 3px 3px 0; }
+.train-head .title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.train-head .title b { font-size: 15px; }
+.train-head .title span { font-size: 13px; color: #d7d9df; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.train-head mark { background: #fff; color: #111; border-radius: 3px; padding: 0 4px; margin-right: 3px; }
+.panel.train .chev { position: static; width: 30px; height: 30px; font-size: 20px; color: #fff; border: 0; background: none; cursor: pointer; line-height: 1; }
+.stops { list-style: none; margin: 0; padding: 2px 14px 4px 18px; max-height: 38vh; overflow: auto; scrollbar-width: thin; position: relative; }
+.stops li { display: flex; align-items: center; gap: 12px; padding: 7px 0; position: relative; }
+.stops li::before { content: ""; position: absolute; left: 4px; top: 0; bottom: 0; width: 4px; background: #a9a399; }
+.stops li:first-child::before { top: 50%; }
+.stops li:last-child::before { bottom: 50%; }
+.stops .pip { width: 10px; height: 10px; border-radius: 50%; background: #fff; flex: none; z-index: 1; margin-left: 1px; }
+.stops li.next .pip { background: var(--line); box-shadow: 0 0 0 2px #fff; }
+.stops li.next::before { background: linear-gradient(var(--line), #a9a399); }
+.stops .name { flex: 1; font-size: 14px; }
+.stops li.next .name { font-weight: 700; }
+.stops .when { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; }
+.stops .when small { color: #9aa0ad; font-size: 11px; }
+.stops .muted { color: #9aa0ad; padding-left: 4px; }
+.panel.train .row { padding: 8px 14px 12px; }
+.panel.train .row small { color: #9aa0ad; max-width: 150px; }
+.panel.train .row button { background: #23252e; color: #fff; border-color: #3a3d49; }
+.panel.train .row button.on { background: #1b6ef3; border-color: #1b6ef3; }
