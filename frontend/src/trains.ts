@@ -14,6 +14,7 @@ import {
   type Chain,
   type TrackIndex,
 } from "./tracks";
+import { liftDark } from "./daynight";
 
 // Each update says where a train is now and where it will be one poll later, as
 // distances along a run of real track. The browser slides every train along that
@@ -28,8 +29,8 @@ const KEEP_LEFT = 0.25;
 
 // Train size in metres, a little chunkier than real so it reads as 3D. When zoomed
 // out it is drawn larger so it stays visible.
-const REAL = { length: 72, width: 4.6, height: 5.6 };
-const SCREEN_PX = { length: 16, width: 5, height: 4.5 };
+const REAL = { length: 90, width: 7, height: 7 };
+const SCREEN_PX = { length: 22, width: 8, height: 7 };
 
 interface Glide {
   colour: string;
@@ -81,6 +82,18 @@ export function createTrainsLayer(index: TrackIndex) {
   let lights: THREE.InstancedMesh;
   const meshes: THREE.InstancedMesh[] = [];
   let selected: string | null = null;
+  let night = false;
+  let ambient: THREE.AmbientLight | undefined;
+  let sunLight: THREE.DirectionalLight | undefined;
+  const applyNight = () => {
+    if (!ambient || !sunLight || !windows) return;
+    ambient.intensity = night ? 0.8 : 1.0;
+    sunLight.intensity = night ? 0.45 : 0.9;
+    // lit windows after dark
+    const mat = windows.material as THREE.MeshLambertMaterial;
+    mat.color.set(night ? 0x2a2418 : 0x16222e);
+    mat.emissive.set(night ? 0xffcf70 : 0x000000);
+  };
 
   const slide = (g: Glide, now: number) => {
     const f = Math.min(Math.max((now - g.start) / GLIDE_MS, 0), 1);
@@ -113,10 +126,11 @@ export function createTrainsLayer(index: TrackIndex) {
       skirt = make(bandGeometry(), new THREE.MeshLambertMaterial({ color: 0x2b2f33 }), MAX_TRAINS * CARS);
       lights = make(bandGeometry(), new THREE.MeshBasicMaterial({ color: 0xffffff }), MAX_TRAINS * 2);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-      const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-      sun.position.set(0.4, -0.7, 1);
-      scene.add(sun);
+      ambient = new THREE.AmbientLight(0xffffff, 1.0);
+      sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      sunLight.position.set(0.4, -0.7, 1);
+      scene.add(ambient, sunLight);
+      applyNight();
     },
     render(_gl, args) {
       const now = performance.now();
@@ -138,7 +152,7 @@ export function createTrainsLayer(index: TrackIndex) {
         const w = isSel ? width * 1.4 : width;
         const h = isSel ? height * 1.4 : height;
         const s = slide(g, now);
-        tint.set(g.colour);
+        tint.set(night ? liftDark(g.colour) : g.colour);
         if (isSel) tint.lerp(bright, 0.35);
 
         let firstPhi = 0;
@@ -261,6 +275,12 @@ export function createTrainsLayer(index: TrackIndex) {
     layer,
     select(id: string | null) {
       selected = id;
+      map?.triggerRepaint();
+    },
+    // Evening look: dimmer light and windows that glow.
+    setNight(value: boolean) {
+      night = value;
+      applyNight();
       map?.triggerRepaint();
     },
     // Where a train is drawn right now, for follow mode.

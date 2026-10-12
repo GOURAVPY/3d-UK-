@@ -113,6 +113,16 @@ export function createFlightsLayer() {
   let tail: THREE.InstancedMesh;
   let shadow: THREE.InstancedMesh;
   let selected: string | null = null;
+  let night = false;
+  let ambient: THREE.AmbientLight | undefined;
+  let sunLight: THREE.DirectionalLight | undefined;
+  const applyNight = () => {
+    if (!ambient || !sunLight) return;
+    ambient.intensity = night ? 0.85 : 1.0;
+    sunLight.intensity = night ? 0.5 : 0.9;
+    (body.material as THREE.MeshLambertMaterial).color.set(night ? 0xe3e9f0 : 0xc3ced8);
+    (shadow.material as THREE.MeshBasicMaterial).opacity = night ? 0.35 : 0.2;
+  };
 
   // Where a plane is drawn at time `now`: dead reckoning from its last report.
   const place = (p: Plane, now: number) => {
@@ -146,10 +156,11 @@ export function createFlightsLayer() {
         mesh.frustumCulled = false;
         scene.add(mesh);
       }
-      scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-      const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-      sun.position.set(0.4, -0.7, 1);
-      scene.add(sun);
+      ambient = new THREE.AmbientLight(0xffffff, 1.0);
+      sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      sunLight.position.set(0.4, -0.7, 1);
+      scene.add(ambient, sunLight);
+      applyNight();
     },
     render(_gl, args) {
       const now = performance.now();
@@ -214,6 +225,11 @@ export function createFlightsLayer() {
     layer,
     select(id: string | null) {
       selected = id;
+      map?.triggerRepaint();
+    },
+    setNight(value: boolean) {
+      night = value;
+      applyNight();
       map?.triggerRepaint();
     },
     // Where an aircraft is drawn right now, for follow mode.
