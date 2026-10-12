@@ -24,8 +24,15 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Lessons:** DLR predictions have no vehicleId; check every line's data shape, not just one.
 **Next week:** Week 3 below.
 
-## Week 3 — Position estimate and smooth movement 🟨
+## Week 3 — Position estimate and smooth movement ✅ (2026-10-12)
 **Goal:** estimate where each train is between stations; animate smoothly.
+**Done:**
+- Position estimate between stations from next stop, station behind it, track slice and time to arrival.
+- Server sends now and 30 s ahead; browser glides each train between them every frame.
+**Not done / limits:** speeds are guesses; dwell time not modelled; no DLR; map source redrawn per frame (InstancedMesh later if slow).
+**Numbers:** 807 trains, 507 moving, 300 waiting at a station, median 330 m per 30 s.
+**Lessons:** terminus turn-backs break "station behind" logic; the location text is blank on some lines.
+**Next week:** Week 4 below.
 
 ## Week 4 — Train panel, follow camera, departures board ⬜
 **Goal:** click a train for details, follow mode, station departures board.
