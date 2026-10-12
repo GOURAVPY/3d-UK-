@@ -34,13 +34,19 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Lessons:** terminus turn-backs break "station behind" logic; the location text is blank on some lines.
 **Next week:** Week 4 below.
 
-## Week 4 — Train panel, follow camera, departures board 🟨
+## Week 4 — Train panel, follow camera, departures board ✅ (2026-10-12)
 **Goal:** click a train for details, follow mode, station departures board.
-**Done so far (extra, 2026-10-12):** airport shortcuts and a public live streams list. Street traffic cameras were built, then removed by request.
-**Also done:** trains drawn as 3D instanced six-carriage models; zoom fix; real track shapes from OpenStreetMap (469 of 520 links).
-**Still to do:** train panel (click a train), follow camera, station departures board.
+**Done:**
+- Click a train: panel with line, destination, next station, arrival, platform, location.
+- Follow mode: camera rides with the train, turns to its heading, stops when you drag.
+- Click a station: live departures board (15 s refresh, server cache).
+- Extras earlier: airport shortcuts and live streams list; 3D six-carriage trains; real track shapes from OpenStreetMap; zoom and colour fixes.
+**Not done / limits:** not tested on a real phone; no DLR trains; positions are estimates.
+**Numbers:** about 680 trains, 3 new endpoints/components (departures API, train panel, station board).
+**Lessons:** a custom 3D layer needs its own picking; project positions to screen and take the nearest.
+**Next week:** Week 5 below.
 
-## Week 5 — Day/night, delay alerts, replay, phone polish ⬜
+## Week 5 — Day/night, delay alerts, replay, phone polish 🟨
 **Goal:** lighting by London time, service status alerts, 24 h replay at 60x, mobile.
 
 ## Week 6 — Demo, write-up, launch ⬜

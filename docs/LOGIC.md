@@ -38,3 +38,8 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 1. `node scripts/fetch-osm.mjs` downloads London rail ways from Overpass to `data/raw/osm-rail.json` (git-ignored).
 2. `npx tsx scripts/build-tracks.ts` routes every TfL station link over that graph and writes `data/tracks.json`.
 3. The server reads `data/tracks.json` at startup. Re-run when TfL adds stations.
+
+## Interaction (Week 4)
+- **Picking:** the 3D layer keeps every train's drawn position. On click, each is projected to the screen with `map.project` and the nearest within 18 px wins. Otherwise the click is tested against station dots.
+- **Follow:** `requestAnimationFrame` loop sets the map centre to the selected train's drawn position and eases bearing, zoom and pitch.
+- **Departures:** browser asks `/api/stations/:id/arrivals`; server asks TfL `/StopPoint/{id}/Arrivals`, sorts by time, keeps 14 rows, caches 15 s.
