@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { fetchTrains, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
-import { loadAllLines, type Line } from "./lines.js";
+import { applyTracks, loadAllLines, type Line } from "./lines.js";
 import { LineTracks } from "./positioning.js";
 
 const POLL_MS = 30_000;
@@ -37,6 +37,8 @@ async function poll() {
 
 // Static data is loaded once at startup, then arrivals every 30 s.
 lines = await loadAllLines();
+const snapped = applyTracks(lines);
+console.log(snapped ? `Real track shapes for ${snapped} links` : "No data/tracks.json: using TfL path shapes");
 for (const l of lines) tracks.set(l.id, new LineTracks(l));
 console.log(`Loaded ${lines.length} lines`);
 await poll();
