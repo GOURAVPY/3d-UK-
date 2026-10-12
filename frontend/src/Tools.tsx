@@ -7,22 +7,17 @@ const AIRPORTS = [
 ];
 
 interface Props {
-  showCameras: boolean;
-  onToggleCameras: () => void;
   onFlyTo: (lon: number, lat: number) => void;
 }
 
-// Camera toggle, airport shortcuts and the list of public live streams.
-export function Tools({ showCameras, onToggleCameras, onFlyTo }: Props) {
+// Airport shortcuts and the list of public live streams.
+export function Tools({ onFlyTo }: Props) {
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
   const playingStream = STREAMS.find((s) => s.id === playing);
 
   return (
     <div className="tools">
-      <button className={showCameras ? "on" : ""} onClick={onToggleCameras}>
-        Traffic cams {showCameras ? "on" : "off"}
-      </button>
       {AIRPORTS.map((a) => (
         <button key={a.name} onClick={() => onFlyTo(a.lon, a.lat)}>✈ {a.name}</button>
       ))}
