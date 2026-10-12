@@ -10,6 +10,8 @@ export interface Line {
   colour: string;
   paths: LngLat[][];
   stations: Station[];
+  // neighbouring stations in running order, used to find the station behind a train
+  links: [string, string][];
 }
 
 const MODES = "tube,dlr,elizabeth-line,overground";
@@ -22,6 +24,7 @@ interface Sequence {
 async function loadLine(id: string, name: string, mode: string): Promise<Line> {
   const paths = new Map<string, LngLat[]>();
   const stations = new Map<string, Station>();
+  const links = new Map<string, [string, string]>();
   for (const dir of ["outbound", "inbound"]) {
     const seq = await tfl<Sequence>(`/Line/${id}/Route/Sequence/${dir}`);
     // each lineString is a JSON string holding a list of paths
@@ -29,6 +32,10 @@ async function loadLine(id: string, name: string, mode: string): Promise<Line> {
       for (const path of JSON.parse(s) as LngLat[][]) paths.set(JSON.stringify(path), path);
     }
     for (const group of seq.stopPointSequences) {
+      for (let i = 1; i < group.stopPoint.length; i++) {
+        const a = group.stopPoint[i - 1].id, b = group.stopPoint[i].id;
+        links.set([a, b].sort().join("|"), [a, b]);
+      }
       for (const sp of group.stopPoint) {
         stations.set(sp.id, { id: sp.id, name: sp.name, lat: sp.lat, lon: sp.lon });
       }
@@ -39,6 +46,7 @@ async function loadLine(id: string, name: string, mode: string): Promise<Line> {
     colour: LINE_COLOURS[id] ?? "#888888",
     paths: [...paths.values()],
     stations: [...stations.values()],
+    links: [...links.values()],
   };
 }
 
