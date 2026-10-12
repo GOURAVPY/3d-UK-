@@ -305,3 +305,28 @@ Lines sharing a corridor were drawn on top of each other, so a red and a green t
 - Auto cannot be seen changing without waiting for sunset; the manual button was used to check both looks.
 - The dark style is OpenFreeMap's own colours; labels are small grey.
 - Still to do in Week 5: live delay alerts, 24 h replay, phone polish.
+
+## 2026-10-12 — Underground, surface and elevated (like Mini Tokyo 3D)
+
+### Asked for
+Underground track, bridge (elevated) track and surface track should each look different, as in Mini Tokyo 3D. Then a screenshot of several trains of different lines bunched together at Earl's Court.
+
+### Where the level comes from
+- `backend/scripts/build-levels.ts` walks every link every 12 m and looks up the nearest OpenStreetMap rail way within 16 m (12,657 ways, tags included in the data we already downloaded). Tunnel if `tunnel=yes|building_passage|covered` or `layer<0`; elevated if `bridge` is set or `layer>0`; otherwise surface. Runs shorter than 45 m are folded into their neighbour. Output `data/levels.json`, served at `/api/levels`.
+- Result: 456 of 580 links have an underground or elevated stretch. By track length: 34% underground, 57% surface, 9% elevated. Victoria line is fully in tunnel; the DLR has 31 links with viaduct.
+
+### How each kind is drawn
+| | Track | Trains |
+|---|---|---|
+| Underground | faint dashed line, no glow | pale transparent "ghost", sunk about 9 m (or 6 px) below the ground, no lights |
+| Surface | solid coloured lane with glow | opaque, on the ground |
+| Elevated | solid lane on a pale casing (dark in the day) | opaque, raised by the same amount |
+The level eases over 35 m either side of a boundary so trains rise and sink smoothly.
+
+### Bunching fix
+Trains whose next arrival is far off were parked at the station they had just left, so several sat on the same spot. They are now queued behind the platform, soonest departure first, 105 m apart (up to 6 deep, then it repeats). 116 of 700 trains were queued in the first check. Grouped per station, not per next station, so trains heading different ways do not overlap either.
+
+### Known limits
+- A queue is a visual stand-in: we do not know where a waiting train really is.
+- Elevated detection depends on OpenStreetMap having tagged the bridge or viaduct.
+- Ghost trains use a flat transparency, so two ghosts overlapping look slightly darker.

@@ -54,3 +54,9 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 1. `sunElevation(date)` gives the sun's height over London; `isNight` is true below -1.5 degrees. A clock in the app re-checks every 30 s.
 2. The theme (Auto, Day, Night) picks the base map style. Changing it calls `map.setStyle`, and every `style.load` rebuilds our buildings, lanes, stations, trains and planes in the right look.
 3. Night values live next to the code that draws them: building colours, lane glow, station dots, `liftDark` for very dark lines, and lighting plus lit windows in the train and plane layers.
+
+## Underground, surface, elevated
+1. Offline: `scripts/build-levels.ts` classifies every stretch of every link from OpenStreetMap tunnel, bridge and layer tags and writes `data/levels.json`.
+2. Browser: `TrackIndex` turns the runs into a level profile per chain (`levelAt`) and splits every drawn link into one feature per level. Map layers: dashed faint (underground), casing plus lane (elevated), glow plus lane (surface).
+3. Trains: each carriage looks up the level at its own centre. Underground carriages go into the ghost meshes (transparent) and sit lower; elevated carriages sit higher.
+4. Waiting trains (d0 = 0) are queued behind their station on the server (`queueWaitingTrains`).
