@@ -430,3 +430,20 @@ Read https://minitokyo3d.com/docs/master/user-guide/display-modes.html and lined
 
 ### Plugins page (developer guide, "Adding plugins")
 Read https://minitokyo3d.com/docs/master/developer-guide/integration.html. It explains embedding the map (script tags or the `mini-tokyo-3d` npm package, with Mapbox and ODPT tokens) and adding plugins such as Precipitation and Fireworks through a `plugins: [...]` option. It does not define the plugin interface, so nothing here changes; it is a model if we want weather or events as separate optional layers later.
+
+## 2026-10-12 — UI redesign
+
+### Problem
+The interface had grown one patch at a time: stacked text buttons with emoji, a white key box, three different panel looks, and no shared spacing or colours.
+
+### What changed
+- **Design tokens** (`styles/app.css`): one set of CSS variables for card colour, border, text, muted text, accent, amber, red, radius, shadow and blur. `<html data-theme="day|night">` follows the map, so the whole interface is light glass by day and dark glass at night.
+- **Icon toolbar** (`ui/Toolbar.tsx`): 42 px icon buttons in three groups (theme, eco, full screen | underground, playback | LHR, LCY, live streams) with a tooltip to the left, a pressed state in the accent colour, an "A" badge when the theme is automatic. Live streams open in a popover instead of pushing the buttons down. Inline SVG icons (`ui/Icon.tsx`), no emoji.
+- **HUD** (`ui/Hud.tsx`): a card with a pulsing LIVE (amber PLAYBACK) indicator, London time, large train and aircraft counts, last update.
+- **Lines card** (`ui/Legend.tsx`): collapsible, collapsed by default on phones, with an amber or red tag next to any line with a service problem and TfL's text on hover.
+- **Panels**: one card style with a round close button, consistent buttons (quiet and primary), the train timeline restyled, the station screen kept dark like a real platform board in both themes.
+- **Alerts and playback bar**: pill and card restyled; playback buttons use icons.
+- **Behaviour**: slide-in animation, visible keyboard focus, reduced-motion support, tabular numbers for times and counts.
+
+### Known limits
+- Checked in the desktop window at night and by day and earlier in the phone emulator; the phone layout (toolbar, collapsed legend, bottom sheets) was updated but not re-checked on a real phone.
