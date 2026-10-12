@@ -20,6 +20,8 @@ export interface Train {
   currentLocation: string;
   secondsToNext: number;
   expectedArrival: string;
-  lat: number;
+  lat: number; // estimated position when the update arrived
   lon: number;
+  toLat: number; // where it will be one poll later
+  toLon: number;
 }
