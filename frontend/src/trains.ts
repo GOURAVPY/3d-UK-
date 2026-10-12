@@ -91,7 +91,10 @@ export function createTrainsLayer(index: TrackIndex) {
   const meshes: THREE.InstancedMesh[] = [];
   let selected: string | null = null;
   let night = false;
-  let undergroundMode = false; // trains below ground are drawn solid, not as ghosts
+  // Underground Mode: what is below ground is solid and bright, what is above turns translucent
+  // (and the other way round when the mode is off).
+  let undergroundMode = false;
+  let frameGapMs = 0; // Eco Mode: wait this long between redraws
   let glideMs = LIVE_GLIDE_MS; // shorter while replaying at high speed
   let ambient: THREE.AmbientLight | undefined;
   let sunLight: THREE.DirectionalLight | undefined;
@@ -208,7 +211,7 @@ export function createTrainsLayer(index: TrackIndex) {
           lastPhi = phi;
 
           const lv = levelAt(g.chain, centre);
-          const under = lv < -0.5 && !undergroundMode;
+          const under = undergroundMode ? lv >= -0.5 : lv < -0.5; // drawn as a translucent ghost
           const base = 1 + lv * levelHeight;
           const bodyMesh = under ? ghostBody : body;
           const windowMesh = under ? ghostWindows : windows;
@@ -244,7 +247,7 @@ export function createTrainsLayer(index: TrackIndex) {
           [s - length / 2 - 0.3, TAILLIGHT, firstPhi],
         ] as const) {
           const endLevel = levelAt(g.chain, end);
-          if (endLevel < -0.5 && !undergroundMode) continue; // no bright lights on a ghost train underground
+          if (undergroundMode ? endLevel >= -0.5 : endLevel < -0.5) continue; // no bright lights on a ghost
           pointAt(g.chain, end, a);
           const n = phi === lastPhi && end > s ? headN : tailN;
           const side = (laneAt(g.chain, end) + KEEP_LEFT) * spacing;
@@ -277,7 +280,9 @@ export function createTrainsLayer(index: TrackIndex) {
       renderer.resetState();
       renderer.clearDepth(); // trains run underground, so never let buildings cut through them
       renderer.render(scene, camera);
-      map.triggerRepaint(); // keep animating
+      // keep animating: every frame normally, a few times a second in Eco Mode
+      if (frameGapMs) setTimeout(() => map.triggerRepaint(), frameGapMs);
+      else map.triggerRepaint();
     },
     onRemove() {
       for (const m of meshes) {
@@ -304,6 +309,16 @@ export function createTrainsLayer(index: TrackIndex) {
 
   return {
     layer,
+    // Eco Mode: redraw trains about eight times a second to save power and heat.
+    setEco(on: boolean) {
+      frameGapMs = on ? 125 : 0;
+      map?.triggerRepaint();
+    },
+    // -1 underground, 0 surface, 1 elevated, where a train is drawn right now.
+    levelOf(id: string): number | null {
+      const g = glides.get(id);
+      return g ? levelAt(g.chain, slide(g, performance.now())) : null;
+    },
     setUnderground(on: boolean) {
       undergroundMode = on;
       map?.triggerRepaint();

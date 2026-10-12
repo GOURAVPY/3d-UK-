@@ -10,6 +10,10 @@ interface Props {
   mode: "auto" | "day" | "night";
   night: boolean;
   onCycleMode: () => void;
+  eco: boolean;
+  onToggleEco: () => void;
+  fullscreen: boolean;
+  onToggleFullscreen: () => void;
   underground: boolean;
   onToggleUnderground: () => void;
   replay: boolean;
@@ -18,7 +22,10 @@ interface Props {
 }
 
 // Airport shortcuts and the list of public live streams.
-export function Tools({ mode, night, onCycleMode, underground, onToggleUnderground, replay, onToggleReplay, onFlyTo }: Props) {
+export function Tools({
+  mode, night, onCycleMode, eco, onToggleEco, fullscreen, onToggleFullscreen,
+  underground, onToggleUnderground, replay, onToggleReplay, onFlyTo,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
   const playingStream = STREAMS.find((s) => s.id === playing);
@@ -28,11 +35,17 @@ export function Tools({ mode, night, onCycleMode, underground, onToggleUndergrou
       <button onClick={onCycleMode} title="Switch between automatic, day and night">
         {night ? "🌙" : "☀️"} {mode === "auto" ? "Auto" : mode === "day" ? "Day" : "Night"}
       </button>
+      <button className={eco ? "on" : ""} onClick={onToggleEco} title="Eco mode: update trains and aircraft less often to save power">
+        🔋 Eco
+      </button>
+      <button onClick={onToggleFullscreen} title="Full screen (Esc to leave)">
+        {fullscreen ? "⤡ Exit full screen" : "⤢ Full screen"}
+      </button>
       <button className={underground ? "on" : ""} onClick={onToggleUnderground} title="Show what is below ground: station layouts, platforms, passages">
         🕳 Underground
       </button>
-      <button className={replay ? "on" : ""} onClick={onToggleReplay} title="Replay the last 24 hours at 60 times speed">
-        ⏪ Replay
+      <button className={replay ? "on" : ""} onClick={onToggleReplay} title="Playback: review what was recorded, at up to 600 times speed">
+        ▶ Playback
       </button>
       {AIRPORTS.map((a) => (
         <button key={a.name} onClick={() => onFlyTo(a.lon, a.lat)}>✈ {a.name}</button>

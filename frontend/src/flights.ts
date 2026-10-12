@@ -114,6 +114,7 @@ export function createFlightsLayer() {
   let tail: THREE.InstancedMesh;
   let shadow: THREE.InstancedMesh;
   let selected: string | null = null;
+  let frameGapMs = 0; // Eco Mode
   let night = false;
   let ambient: THREE.AmbientLight | undefined;
   let sunLight: THREE.DirectionalLight | undefined;
@@ -211,7 +212,8 @@ export function createFlightsLayer() {
 
       renderer.resetState();
       renderer.render(scene, camera);
-      map.triggerRepaint();
+      if (frameGapMs) setTimeout(() => map.triggerRepaint(), frameGapMs);
+      else map.triggerRepaint();
     },
     onRemove() {
       for (const mesh of [body, tail, shadow]) {
@@ -226,6 +228,21 @@ export function createFlightsLayer() {
     layer,
     select(id: string | null) {
       selected = id;
+      map?.triggerRepaint();
+    },
+    setEco(on: boolean) {
+      frameGapMs = on ? 125 : 0;
+      map?.triggerRepaint();
+    },
+    // Underground Mode: aircraft are above ground, so they turn translucent.
+    setUnderground(on: boolean) {
+      for (const m of [body, tail]) {
+        const mat = m.material as THREE.MeshLambertMaterial;
+        mat.transparent = on;
+        mat.opacity = on ? 0.3 : 1;
+        mat.depthWrite = !on;
+        mat.needsUpdate = true;
+      }
       map?.triggerRepaint();
     },
     setNight(value: boolean) {

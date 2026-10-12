@@ -13,8 +13,14 @@ interface Snapshot {
   r: (number | string)[][];
 }
 
-const SPEED = 60; // one real second is one minute of the day
 const WINDOW_MS = 20 * 60_000; // how much history to fetch at a time
+
+// Speed steps as in Mini Tokyo 3D's Playback Mode: 1 to 10 by 1, 10 to 100 by 10,
+// 100 to 600 by 100.
+const stepSpeed = (speed: number, dir: 1 | -1) => {
+  const step = dir > 0 ? (speed < 10 ? 1 : speed < 100 ? 10 : 100) : speed <= 10 ? 1 : speed <= 100 ? 10 : 100;
+  return Math.min(600, Math.max(1, speed + dir * step));
+};
 
 interface Props {
   lines: Line[];
@@ -24,15 +30,41 @@ interface Props {
 
 const londonTime = (ms: number) =>
   new Date(ms).toLocaleString("en-GB", {
-    timeZone: "Europe/London", weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/London", weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
   });
 
-// Replays recorded history: the server keeps every poll of the last 24 hours, the browser
-// plays them back 60 times faster and the 3D layer slides trains between snapshots.
+// London's offset from UTC at a moment (60 or 0 minutes), so dates typed in London
+// time can be turned back into a timestamp.
+function londonOffsetMs(ms: number): number {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(ms).map((x) => [x.type, x.value]),
+  );
+  const asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return Math.round((asUtc - ms) / 1000) * 1000;
+}
+const toLondonInputs = (ms: number) => {
+  const d = new Date(ms + londonOffsetMs(ms)).toISOString();
+  return { date: d.slice(0, 10), time: d.slice(11, 19) };
+};
+const fromLondonInputs = (date: string, time: string) => {
+  const guess = Date.parse(`${date}T${time.length === 5 ? time + ":00" : time}Z`);
+  return guess - londonOffsetMs(guess);
+};
+
+// Playback Mode: the server keeps every poll of the last 24 hours; the browser plays them
+// back at up to 600 times real speed and the 3D layer slides trains between snapshots.
 export function ReplayBar({ lines, onFrame, onClose }: Props) {
   const [info, setInfo] = useState<Info | null>(null);
   const [vt, setVt] = useState(0); // the moment being shown, ms since 1970
   const [playing, setPlaying] = useState(true);
+  const [speed, setSpeed] = useState(60);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({ date: "", time: "" });
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
   const snaps = useRef<Snapshot[]>([]);
   const loaded = useRef<{ from: number; to: number } | null>(null);
   const lastShown = useRef(-1);
@@ -110,7 +142,7 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
     [info],
   );
 
-  // Time passes SPEED times faster than on the clock.
+  // Time passes `speed` times faster than on the clock.
   useEffect(() => {
     if (!info?.from || !info.to || !playing) return;
     let raf = 0;
@@ -119,7 +151,7 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
       const dt = now - last;
       last = now;
       setVt((v) => {
-        const next = v + dt * SPEED;
+        const next = v + dt * speedRef.current;
         if (next >= info.to!) {
           setPlaying(false);
           return info.to!;
@@ -147,7 +179,8 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
     }
     if (pick && pick.t !== lastShown.current) {
       lastShown.current = pick.t;
-      onFrame(decode(pick), Math.max(200, 30_000 / SPEED));
+      // snapshots are 30 s apart: at speed x one arrives every 30/x real seconds
+      onFrame(decode(pick), Math.max(120, 30_000 / speedRef.current));
     }
   }, [vt, info, load, decode, onFrame]);
 
@@ -162,28 +195,65 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
   }
 
   const spanMin = Math.round((info.to - info.from) / 60000);
+  const openEditor = () => {
+    setPlaying(false);
+    setDraft(toLondonInputs(vt));
+    setEditing(true);
+  };
+  const confirm = () => {
+    const ms = fromLondonInputs(draft.date, draft.time);
+    if (Number.isFinite(ms)) setVt(Math.min(info.to!, Math.max(info.from!, ms)));
+    setEditing(false);
+  };
+
   return (
     <div className="replay">
-      <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
-        {playing ? "⏸" : "▶"}
-      </button>
-      <input
-        type="range"
-        min={info.from}
-        max={info.to}
-        step={30_000}
-        value={vt}
-        onChange={(e) => {
-          setPlaying(false);
-          setVt(Number(e.target.value));
-        }}
-        aria-label="Replay time"
-      />
-      <div className="when">
-        <b>{londonTime(vt)}</b>
-        <small>{SPEED}× · {spanMin < 120 ? `${spanMin} min` : `${(spanMin / 60).toFixed(1)} h`} recorded</small>
-      </div>
-      <button onClick={onClose}>Live</button>
+      {editing ? (
+        <>
+          <div className="editor">
+            <label>
+              Date (London)
+              <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
+            </label>
+            <label>
+              Time
+              <input type="time" step={1} value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} />
+            </label>
+            <small>Recorded: {londonTime(info.from)} to {londonTime(info.to)}</small>
+          </div>
+          <button onClick={confirm}>OK</button>
+          <button onClick={() => setEditing(false)}>Cancel</button>
+        </>
+      ) : (
+        <>
+          <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
+            {playing ? "⏸" : "▶"}
+          </button>
+          <input
+            type="range"
+            min={info.from}
+            max={info.to}
+            step={30_000}
+            value={vt}
+            onChange={(e) => {
+              setPlaying(false);
+              setVt(Number(e.target.value));
+            }}
+            aria-label="Playback time"
+          />
+          <div className="when">
+            <b>{londonTime(vt)}</b>
+            <small>{spanMin < 120 ? `${spanMin} min` : `${(spanMin / 60).toFixed(1)} h`} recorded</small>
+            <button className="link" onClick={openEditor}>Edit date &amp; time</button>
+          </div>
+          <div className="speed" aria-label="Playback speed">
+            <button onClick={() => setSpeed((s) => stepSpeed(s, -1))} aria-label="Slower">−</button>
+            <span>{speed}×</span>
+            <button onClick={() => setSpeed((s) => stepSpeed(s, 1))} aria-label="Faster">+</button>
+          </div>
+          <button onClick={onClose}>Live</button>
+        </>
+      )}
     </div>
   );
 }

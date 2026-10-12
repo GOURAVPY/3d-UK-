@@ -143,3 +143,13 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 .key { max-height: 36vh; }
 .panel.board { max-height: 54vh; display: flex; flex-direction: column; overflow: hidden; }
 .panel.board ol { flex: 1; min-height: 0; max-height: none; }
+/* Playback mode: speed and date editor */
+.replay { flex-wrap: wrap; }
+.replay .speed { display: flex; align-items: center; gap: 4px; }
+.replay .speed span { min-width: 44px; text-align: center; font-size: 13px; }
+.replay .speed button { padding: 4px 9px; }
+.replay .link { background: none; border: 0; color: #8fb4ff; padding: 0; font-size: 11px; text-align: right; }
+.replay .editor { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; flex: 1; }
+.replay .editor label { display: flex; flex-direction: column; font-size: 11px; color: #9aa0ad; gap: 3px; }
+.replay .editor input { background: #23252e; color: #fff; border: 1px solid #3a3d49; border-radius: 6px; padding: 5px 7px; color-scheme: dark; }
+.replay .editor small { width: 100%; color: #9aa0ad; font-size: 11px; }

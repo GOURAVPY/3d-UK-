@@ -61,6 +61,8 @@ export function App() {
   const [station, setStation] = useState<{ id: string; name: string } | null>(null);
   const [following, setFollowing] = useState(false);
   const [replay, setReplay] = useState(false);
+  const [eco, setEco] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const { trains, updatedAt } = useTrains();
   const flights = useFlights();
   const status = useStatus();
@@ -141,6 +143,8 @@ export function App() {
         setStation(null);
         setSelectedFlightId(null);
         setSelectedId(train);
+        const lv = trains3d.current?.levelOf(train);
+        if (lv !== null && lv !== undefined) setUnderground(lv < -0.5);
         return;
       }
       const plane = flights3d.current?.pick(e.point.x, e.point.y);
@@ -197,6 +201,7 @@ export function App() {
     if (!ready || !mapRef.current) return;
     setUndergroundMode(mapRef.current, underground, night);
     trains3d.current?.setUnderground(underground);
+    flights3d.current?.setUnderground(underground);
   }, [ready, underground, night, styleVersion]);
 
   // While replaying, the recorded trains drive the map instead of the live feed.
@@ -220,9 +225,27 @@ export function App() {
     setFollowing(false);
   };
 
+  // Playback shows recorded trains only; aircraft are not recorded.
   useEffect(() => {
-    if (ready) flights3d.current?.update(flights);
-  }, [ready, flights, styleVersion]);
+    if (ready) flights3d.current?.update(replay ? [] : flights);
+  }, [ready, flights, styleVersion, replay]);
+
+  // Eco Mode
+  useEffect(() => {
+    if (!ready) return;
+    trains3d.current?.setEco(eco);
+    flights3d.current?.setEco(eco);
+  }, [ready, eco, styleVersion]);
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void document.documentElement.requestFullscreen().catch(() => undefined);
+  };
 
   useEffect(() => {
     trains3d.current?.select(selectedId);
@@ -271,6 +294,14 @@ export function App() {
         ? trains3d.current?.positionOf(targetId)
         : flights3d.current?.positionOf(targetId);
       if (p) {
+        if (selectedId) {
+          const lv = trains3d.current?.levelOf(selectedId);
+          // a little hysteresis so a train at the tunnel mouth does not flicker the mode
+          if (lv !== null && lv !== undefined) {
+            if (lv < -0.7 && !undergroundRef.current) setUnderground(true);
+            else if (lv > -0.3 && undergroundRef.current) setUnderground(false);
+          }
+        }
         const alt = (p as { alt?: number }).alt;
         if (!selectedId && alt !== undefined) map.setCenterElevation(alt);
         const delta = ((p.heading - map.getBearing() + 540) % 360) - 180; // shortest turn
@@ -310,6 +341,10 @@ export function App() {
       <Tools
         mode={mode}
         night={night}
+        eco={eco}
+        onToggleEco={() => setEco((e) => !e)}
+        fullscreen={fullscreen}
+        onToggleFullscreen={toggleFullscreen}
         underground={underground}
         onToggleUnderground={() => setUnderground((u) => !u)}
         replay={replay}
