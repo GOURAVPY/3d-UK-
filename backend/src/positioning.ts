@@ -1,4 +1,4 @@
-import { distance, makeTrack, pointAt, type Track } from "./geo.js";
+import { bearingAt, distance, makeTrack, pointAt, type Track } from "./geo.js";
 import type { Line, LngLat } from "./lines.js";
 
 // Average running speed between stations, in metres per second. A tunable guess.
@@ -71,6 +71,12 @@ export class LineTracks {
     }
     this.cache.set(key, best);
     return best;
+  }
+
+  // Direction of travel (compass degrees) at that same spot.
+  headingAt(track: Track, secondsToNext: number): number {
+    const remaining = Math.min(Math.max(secondsToNext, 0) * this.speed, track.length);
+    return bearingAt(track, track.length - remaining);
   }
 
   // Where a train is when it is `secondsToNext` seconds from its next station.
