@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { fetchTrains, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
+import { departuresFor } from "./departures.js";
 import { applyTracks, loadAllLines, type Line } from "./lines.js";
 import { LineTracks } from "./positioning.js";
 
@@ -21,6 +22,15 @@ let trains: Train[] = [];
 app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, trains: trains.length }));
 app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
+app.get("/api/stations/:id/arrivals", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
+  try {
+    res.json(await departuresFor(id));
+  } catch {
+    res.status(502).json({ error: "TfL unavailable" });
+  }
+});
 
 // New browsers get the latest trains straight away.
 io.on("connection", (socket) => socket.emit("trains", trains));
