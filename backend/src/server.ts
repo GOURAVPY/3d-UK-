@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { fetchTrains, type Train } from "./arrivals.js";
+import { fetchTrains, stopsFor, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
 import { existsSync, readFileSync } from "node:fs";
 import { departuresFor } from "./departures.js";
@@ -35,6 +35,13 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, 
 app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
 app.get("/api/flights", (_req, res) => res.json(flights));
+// Upcoming stops of one train (id like "victoria:213"), for its timeline panel.
+app.get("/api/trains/:id/stops", (req, res) => {
+  if (!/^[a-z-]+:[A-Za-z0-9_-]+$/.test(req.params.id)) return res.status(400).json({ error: "bad train id" });
+  const stops = stopsFor(req.params.id);
+  if (!stops) return res.status(404).json({ error: "train not found" });
+  res.json(stops);
+});
 // Real track shape per line and station link, keyed "lineId|idA|idB" (A < B), oriented A to B.
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/lanes", (_req, res) => res.json(lanes));

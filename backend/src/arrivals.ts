@@ -39,6 +39,19 @@ interface Prediction {
   expectedArrival: string;
 }
 
+export interface Stop {
+  id: string;
+  name: string;
+  seconds: number;
+  expectedArrival: string;
+}
+
+// Upcoming stops of every train from the last poll, keyed by train id.
+let stopsByTrain = new Map<string, Stop[]>();
+export function stopsFor(trainId: string): Stop[] | undefined {
+  return stopsByTrain.get(trainId);
+}
+
 // One request per line. The same train appears in many stations' predictions,
 // so group by vehicle: its soonest prediction is the next stop, the one after
 // that tells us which way it is heading.
@@ -51,6 +64,7 @@ export async function fetchTrains(
     lines.map((l) => tfl<Prediction[]>(`/Line/${l.id}/Arrivals`)),
   );
   const trains: Train[] = [];
+  const stops = new Map<string, Stop[]>();
   results.forEach((r, i) => {
     if (r.status !== "fulfilled") return;
     const line = lines[i];
@@ -95,6 +109,19 @@ export async function fetchTrains(
         const after = following && ahead.includes(following) ? following : ahead.length === 1 ? ahead[0] : null;
         if (after) ids.push(after);
       }
+      const seenStops = new Set<string>();
+      stops.set(
+        `${line.id}:${vehicleId}`,
+        preds
+          .filter((p) => !seenStops.has(p.naptanId) && !!seenStops.add(p.naptanId))
+          .slice(0, 16)
+          .map((p) => ({
+            id: p.naptanId,
+            name: p.stationName,
+            seconds: p.timeToStation,
+            expectedArrival: p.expectedArrival,
+          })),
+      );
       trains.push({
         id: `${line.id}:${vehicleId}`,
         lineId: line.id,
@@ -120,6 +147,7 @@ export async function fetchTrains(
     }
   });
   queueWaitingTrains(trains);
+  stopsByTrain = stops;
   return trains;
 }
 
