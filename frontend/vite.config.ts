@@ -6,5 +6,10 @@ export default defineConfig({
   // keep maplibre unbundled so its web worker file resolves
   optimizeDeps: { exclude: ["maplibre-gl"] },
   // the browser talks to our server, never to TfL directly
-  server: { proxy: { "/api": "http://localhost:3001" } },
+  server: {
+    proxy: {
+      "/api": "http://localhost:3001",
+      "/socket.io": { target: "http://localhost:3001", ws: true },
+    },
+  },
 });
