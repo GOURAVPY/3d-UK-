@@ -39,6 +39,18 @@ interface Prediction {
   expectedArrival: string;
 }
 
+// Overground and Elizabeth line predictions include services that have not left their depot
+// or terminus yet (next stop up to two hours away). Those are timetable entries, not trains
+// on the line, and they pile up at the stations. No real train is further than this from its
+// next stop.
+const MAX_RUNNING_S = 15 * 60;
+
+// A train about to arrive somewhere then not reaching its following stop for over this long
+// is not a train in service: its first prediction is a leftover from the timetable (eight
+// Elizabeth line trips all said "Heathrow Terminal 4 in 3 seconds" and "Terminals 2 and 3
+// in 38 minutes"). Real trains are never this far apart from one stop to the next.
+const MAX_GAP_S = 20 * 60;
+
 export interface Stop {
   id: string;
   name: string;
@@ -79,6 +91,8 @@ export async function fetchTrains(
     for (const [vehicleId, preds] of byVehicle) {
       preds.sort((a, b) => a.timeToStation - b.timeToStation);
       const next = preds[0];
+      if (next.timeToStation > MAX_RUNNING_S) continue; // scheduled, not running yet
+      if (preds[1] && preds[1].timeToStation - next.timeToStation > MAX_GAP_S) continue; // stale first prediction
       const at = lt.station(next.naptanId);
       if (!at) continue; // no coordinates for this stop
 
