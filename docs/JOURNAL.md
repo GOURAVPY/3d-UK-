@@ -153,3 +153,26 @@ Week 4: click a train for details, follow camera, station departures board.
 | Colours washed out or wrong | Lights too strong (ambient 1.1 + sun 1.6) and an extra 12% white tint | Ambient 1.0 + sun 0.9, no tint, so the roof shows the true line colour |
 | Train box cut through buildings | Tracks run in tunnels under the buildings, and the box shared the buildings' depth buffer | Clear depth before drawing trains, so they always show on top |
 | Centre of the map was a solid blob of bars | Trains drawn about 22 px long when zoomed out | 14 px long, 4.5 px wide |
+
+## 2026-10-12 — Day 3, later: accurate tracks and a better train model
+
+### Studied Mini Tokyo 3D (MIT licence)
+Cloned to a scratch folder outside the repo, read only, not run or copied.
+- It does not draw tracks from the live feed. It ships pre-built per-railway geometry (`data/coordinates.json`, about 2.5 MB: per railway, sublines with start/end station and a polyline).
+- Trains are placed by slicing along that polyline (`src/turf/line-slice-along.js`), then drawn in a Three.js layer (`src/layers/three-layer.js`).
+- Takeaway for us: build the track geometry once, offline, and ship it as data. We did exactly that.
+
+### Accurate tracks
+- TfL only gives straight lines between stations. Real track shape comes from OpenStreetMap.
+- `backend/scripts/fetch-osm.mjs` downloads every subway, rail and light-rail way in Greater London from the Overpass API (tried four servers; only the French mirror answered). 12,657 ways, 14 MB, git-ignored.
+- `backend/scripts/build-tracks.ts` builds a graph from those ways and routes every station-to-station link with A*, keeping only routes no longer than 1.6x the straight distance plus 300 m.
+- Result: 469 of 520 links snapped (median detour 1.02), 51 stay straight. `backend/data/tracks.json` (400 KB) is committed.
+- The server applies it at startup (`applyTracks`), so both the drawn lines and the train positions follow the real curves.
+
+### Better 3D model
+- Each train is six carriages: rounded-roof body in the line colour, dark window band, dark skirt, white headlight at the front, red tail light at the back. Four instanced meshes.
+- Sizes are a little chunkier than real (5.2 m x 6.2 m) so it reads as 3D when zoomed in.
+
+### Known limits
+- 51 links (about 10%) still straight: no OSM route within the detour limit.
+- OSM routing does not know which line a track belongs to, so on shared corridors a link may use the neighbouring line's track. Same corridor, tiny difference.
