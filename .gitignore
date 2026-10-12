@@ -3,3 +3,7 @@ node_modules/
 
 # raw OpenStreetMap download (large)
 backend/data/raw/
+
+# recorded train history (large, rebuilt as the server runs)
+backend/data/history.jsonl
+backend/data/history-meta.json

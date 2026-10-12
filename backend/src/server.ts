@@ -6,6 +6,7 @@ import { fetchTrains, stopsFor, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
 import { existsSync, readFileSync } from "node:fs";
 import { departuresFor } from "./departures.js";
+import { historyInfo, initHistory, readHistory, recordSnapshot } from "./history.js";
 import { fetchFlights, type Flight } from "./flights.js";
 import { fetchStatus, type LineStatus } from "./status.js";
 import { applyTracks, loadAllLines, loadTrackFile, type Line } from "./lines.js";
@@ -38,6 +39,14 @@ app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
 app.get("/api/flights", (_req, res) => res.json(flights));
 app.get("/api/status", (_req, res) => res.json(status));
+// Replay: what has been recorded, and slices of it.
+app.get("/api/history/info", (_req, res) => res.json(historyInfo()));
+app.get("/api/history", (req, res) => {
+  const from = Number(req.query.from);
+  const to = Number(req.query.to);
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return res.status(400).json({ error: "from and to are required" });
+  res.json(readHistory(from, to, 400));
+});
 // Upcoming stops of one train (id like "victoria:213"), for its timeline panel.
 app.get("/api/trains/:id/stops", (req, res) => {
   if (!/^[a-z-]+:[A-Za-z0-9_-]+$/.test(req.params.id)) return res.status(400).json({ error: "bad train id" });
@@ -70,6 +79,7 @@ async function poll() {
   try {
     trains = await fetchTrains(lines, tracks, POLL_MS / 1000);
     io.emit("trains", trains);
+    recordSnapshot(trains);
     console.log(`${new Date().toISOString()} ${trains.length} trains`);
   } catch (err) {
     console.error("poll failed", err);
@@ -100,6 +110,7 @@ trackShapes = loadTrackFile();
 const snapped = applyTracks(lines, trackShapes);
 console.log(snapped ? `Real track shapes for ${snapped} links` : "No data/tracks.json: using TfL path shapes");
 for (const l of lines) tracks.set(l.id, new LineTracks(l));
+initHistory(lines);
 console.log(`Loaded ${lines.length} lines`);
 await poll();
 setInterval(poll, POLL_MS);
