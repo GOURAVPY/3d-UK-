@@ -6,6 +6,7 @@ export interface Line {
   colour: string;
   paths: [number, number][][];
   stations: Station[];
+  links: [string, string][]; // neighbouring stations
 }
 
 export interface Train {

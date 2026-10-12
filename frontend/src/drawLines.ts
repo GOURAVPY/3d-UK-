@@ -1,19 +1,24 @@
-import type { Map } from "maplibre-gl";
+import type { GeoJSONSource, Map } from "maplibre-gl";
 import type { Line } from "./types";
+import { laneSpacingMetres, type TrackIndex } from "./tracks";
 
-// Draw each line's track in its real colour, with a dot for every station.
-export function drawLines(map: Map, lines: Line[]) {
-  map.addSource("lines", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: lines.flatMap((l) =>
-        l.paths.map((p) => ({
-          type: "Feature" as const,
-          properties: { colour: l.colour },
-          geometry: { type: "LineString" as const, coordinates: p },
-        })),
-      ),
+// Each line is a coloured lane with a soft glow, like Mini Tokyo 3D. Lines that share a
+// corridor run side by side. The lanes are redrawn as you zoom so the gap between them
+// stays the same on screen.
+export function drawLines(map: Map, lines: Line[], index: TrackIndex) {
+  const empty = { type: "FeatureCollection" as const, features: [] };
+  map.addSource("lines", { type: "geojson", data: empty });
+
+  map.addLayer({
+    id: "lines-glow",
+    type: "line",
+    source: "lines",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": ["get", "colour"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 7, 13, 12, 17, 20],
+      "line-blur": 6,
+      "line-opacity": 0.28,
     },
   });
   map.addLayer({
@@ -21,8 +26,22 @@ export function drawLines(map: Map, lines: Line[]) {
     type: "line",
     source: "lines",
     layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": ["get", "colour"], "line-width": 3 },
+    paint: {
+      "line-color": ["get", "colour"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 2.5, 13, 4, 17, 6],
+    },
   });
+
+  let drawnAt = Number.NaN;
+  const redraw = () => {
+    // new lane spacing only when the zoom has moved a little, not on every frame
+    const bucket = Math.round(map.getZoom() * 4) / 4;
+    if (bucket === drawnAt) return;
+    drawnAt = bucket;
+    (map.getSource("lines") as GeoJSONSource).setData(index.lineFeatures(lines, laneSpacingMetres(bucket)));
+  };
+  redraw();
+  map.on("zoom", redraw);
 
   map.addSource("stations", {
     type: "geojson",
@@ -41,9 +60,9 @@ export function drawLines(map: Map, lines: Line[]) {
     type: "circle",
     source: "stations",
     paint: {
-      "circle-radius": 3,
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 2.5, 15, 5],
       "circle-color": "#fff",
-      "circle-stroke-width": 1,
+      "circle-stroke-width": 1.2,
       "circle-stroke-color": "#333",
     },
   });
