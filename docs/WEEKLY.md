@@ -34,8 +34,10 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Lessons:** terminus turn-backs break "station behind" logic; the location text is blank on some lines.
 **Next week:** Week 4 below.
 
-## Week 4 — Train panel, follow camera, departures board ⬜
+## Week 4 — Train panel, follow camera, departures board 🟨
 **Goal:** click a train for details, follow mode, station departures board.
+**Done so far (extra, 2026-10-12):** live traffic cameras layer (TfL JamCams) with click-to-view panel, airport shortcuts, public live streams list.
+**Still to do:** train panel, follow camera, station departures board.
 
 ## Week 5 — Day/night, delay alerts, replay, phone polish ⬜
 **Goal:** lighting by London time, service status alerts, 24 h replay at 60x, mobile.
