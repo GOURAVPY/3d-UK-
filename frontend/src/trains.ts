@@ -10,7 +10,7 @@ const MAX_TRAINS = 3000;
 
 // Real train size in metres. When zoomed out we draw it larger so it stays visible.
 const REAL = { length: 110, width: 3.2, height: 3.8 };
-const SCREEN_PX = { length: 22, width: 7, height: 6 };
+const SCREEN_PX = { length: 14, width: 4.5, height: 4 };
 
 // All positions are metres east/north of this point, so float32 stays precise.
 const ORIGIN = MercatorCoordinate.fromLngLat([-0.1276, 51.5072], 0);
@@ -42,7 +42,6 @@ export function createTrainsLayer() {
   const camera = new THREE.Camera();
   const dummy = new THREE.Object3D();
   const tint = new THREE.Color();
-  const white = new THREE.Color(0xffffff);
 
   const position = (g: Glide, now: number): [number, number] => {
     const f = Math.min(Math.max((now - g.start) / GLIDE_MS, 0), 1);
@@ -65,8 +64,8 @@ export function createTrainsLayer() {
       mesh.count = 0;
       mesh.frustumCulled = false;
       scene.add(mesh);
-      scene.add(new THREE.AmbientLight(0xffffff, 1.1));
-      const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+      scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+      const sun = new THREE.DirectionalLight(0xffffff, 0.9);
       sun.position.set(0.4, -0.7, 1);
       scene.add(sun);
     },
@@ -87,7 +86,7 @@ export function createTrainsLayer() {
         dummy.scale.set(width, length, height);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-        mesh.setColorAt(i, tint.set(g.colour).lerp(white, 0.12));
+        mesh.setColorAt(i, tint.set(g.colour));
         i++;
       }
       mesh.count = i;
@@ -102,6 +101,7 @@ export function createTrainsLayer() {
         .multiply(toWorld);
 
       renderer.resetState();
+      renderer.clearDepth(); // trains run underground, so never let buildings cut through them
       renderer.render(scene, camera);
       map.triggerRepaint(); // keep animating
     },
