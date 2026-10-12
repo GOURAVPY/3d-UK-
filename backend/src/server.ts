@@ -30,6 +30,10 @@ let trackShapes: Record<string, [number, number][]> = {};
 const levels: Record<string, [number, number][]> = existsSync("data/levels.json")
   ? JSON.parse(readFileSync("data/levels.json", "utf8"))
   : {};
+// Station buildings, platforms, passages and entrances, for Underground Mode.
+const layout = existsSync("data/station-layout.json")
+  ? JSON.parse(readFileSync("data/station-layout.json", "utf8"))
+  : { type: "FeatureCollection", features: [] };
 // How far to the left of its stored direction each link is drawn when lines share a corridor.
 const lanes: Record<string, number> = existsSync("data/lanes.json")
   ? JSON.parse(readFileSync("data/lanes.json", "utf8"))
@@ -59,6 +63,7 @@ app.get("/api/trains/:id/stops", (req, res) => {
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/lanes", (_req, res) => res.json(lanes));
 app.get("/api/levels", (_req, res) => res.json(levels));
+app.get("/api/layout", (_req, res) => res.json(layout));
 app.get("/api/stations/:id/details", async (req, res) => {
   const id = req.params.id;
   if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
