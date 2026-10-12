@@ -7,3 +7,4 @@
 | [LOGIC.md](LOGIC.md) | How the code works: data flow and the train position maths. |
 | [WORKFLOW.md](WORKFLOW.md) | How we work: commit rule, running the project, secrets. |
 | [FLOWCHART.md](FLOWCHART.md) | Diagrams: system flow, position estimate, weekly cycle, 6-week plan. |
+| [DATA-SOURCES.md](DATA-SOURCES.md) | Every API we use: what it gives, how much, how often. |

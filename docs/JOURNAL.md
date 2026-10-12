@@ -358,3 +358,9 @@ Trains whose next arrival is far off were parked at the station they had just le
 - Replay only covers what the server has recorded, so it needs the server running; right after a start there are only minutes of history. Killing the server does not lose it (it is on disk), but a gap appears.
 - A replayed train has no destination or stop names (they are not stored), so the panel is disabled during replay.
 - Flights are not recorded.
+
+## 2026-10-12 — Station details and data inventory
+- `GET /api/stations/:id/details` (TfL `/StopPoint/{id}`, cached 1 h): zone, lines drawn on our map, other modes (bus, National Rail), facilities (WiFi, toilets, lifts, escalators, cash machines, car park), address.
+- Station panel shows them above the live board, collapsible; `?station=<naptanId>` opens one directly.
+- Panel and line key heights capped so the station name is never hidden.
+- `docs/DATA-SOURCES.md` lists every API with measured sizes and field counts.
