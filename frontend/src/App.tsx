@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
-import type { Line } from "./types";
+import type { Line, Train } from "./types";
 import { add3dBuildings } from "./buildings";
 import { AlertsBar } from "./AlertsBar";
 import { drawLines, setAlerts } from "./drawLines";
 import { createFlightsLayer } from "./flights";
 import { FlightPanel } from "./FlightPanel";
+import { ReplayBar } from "./ReplayBar";
 import { StationPanel } from "./StationPanel";
 import { Tools } from "./Tools";
 import { TrainPanel } from "./TrainPanel";
@@ -55,6 +56,7 @@ export function App() {
   const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null);
   const [station, setStation] = useState<{ id: string; name: string } | null>(null);
   const [following, setFollowing] = useState(false);
+  const [replay, setReplay] = useState(false);
   const { trains, updatedAt } = useTrains();
   const flights = useFlights();
   const status = useStatus();
@@ -181,9 +183,26 @@ export function App() {
     if (ready && mapRef.current) setAlerts(mapRef.current, status);
   }, [ready, status, styleVersion]);
 
+  // While replaying, the recorded trains drive the map instead of the live feed.
   useEffect(() => {
-    if (ready) trains3d.current?.update(trains);
-  }, [ready, trains, styleVersion]);
+    if (ready && !replay) {
+      trains3d.current?.setGlideMs(30_000);
+      trains3d.current?.update(trains);
+    }
+  }, [ready, trains, styleVersion, replay]);
+
+  const showReplayFrame = useCallback((list: Train[], glideMs: number) => {
+    trains3d.current?.setGlideMs(glideMs);
+    trains3d.current?.update(list);
+  }, []);
+
+  const toggleReplay = () => {
+    setReplay((r) => !r);
+    setSelectedId(null);
+    setSelectedFlightId(null);
+    setStation(null);
+    setFollowing(false);
+  };
 
   useEffect(() => {
     if (ready) flights3d.current?.update(flights);
@@ -269,6 +288,8 @@ export function App() {
       <Tools
         mode={mode}
         night={night}
+        replay={replay}
+        onToggleReplay={toggleReplay}
         onCycleMode={() => setMode((m) => (m === "auto" ? "day" : m === "day" ? "night" : "auto"))}
         onFlyTo={(lon, lat) => mapRef.current?.flyTo({ center: [lon, lat], zoom: 13.5, pitch: 55 })}
       />
@@ -294,6 +315,7 @@ export function App() {
       {station && !selected && !selectedFlight && (
         <StationPanel stationId={station.id} name={station.name} onClose={() => setStation(null)} />
       )}
+      {replay && <ReplayBar lines={lines} onFrame={showReplayFrame} onClose={toggleReplay} />}
       <div className="key">
         {lines.map((l) => (
           <div key={l.id}><i style={{ background: l.colour }} />{l.name}</div>

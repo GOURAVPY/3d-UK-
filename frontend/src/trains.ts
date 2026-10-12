@@ -21,7 +21,7 @@ import { PICK_PX, isSmallScreen } from "./device";
 // Each update says where a train is now and where it will be one poll later, as
 // distances along a run of real track. The browser slides every train along that
 // track, and each carriage is placed on its own stretch of it, so trains bend round curves.
-const GLIDE_MS = 30_000;
+const LIVE_GLIDE_MS = 30_000;
 const MAX_TRAINS = 3000;
 const CARS = 6;
 
@@ -91,6 +91,7 @@ export function createTrainsLayer(index: TrackIndex) {
   const meshes: THREE.InstancedMesh[] = [];
   let selected: string | null = null;
   let night = false;
+  let glideMs = LIVE_GLIDE_MS; // shorter while replaying at high speed
   let ambient: THREE.AmbientLight | undefined;
   let sunLight: THREE.DirectionalLight | undefined;
   const applyNight = () => {
@@ -105,7 +106,7 @@ export function createTrainsLayer(index: TrackIndex) {
   };
 
   const slide = (g: Glide, now: number) => {
-    const f = Math.min(Math.max((now - g.start) / GLIDE_MS, 0), 1);
+    const f = Math.min(Math.max((now - g.start) / glideMs, 0), 1);
     return g.fromS + (g.toS - g.fromS) * f;
   };
 
@@ -302,6 +303,9 @@ export function createTrainsLayer(index: TrackIndex) {
 
   return {
     layer,
+    setGlideMs(ms: number) {
+      glideMs = ms;
+    },
     select(id: string | null) {
       selected = id;
       map?.triggerRepaint();
