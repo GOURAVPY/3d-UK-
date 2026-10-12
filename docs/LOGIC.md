@@ -31,7 +31,5 @@ TfL gives arrival predictions, not GPS, so we estimate. Every 30 s:
 
 Edge cases still open: dwell time at stations, trains with a far-off next stop sit at the previous station, branches with two possible previous stations (name hint used), 429 rate limit (back off), no DLR vehicle ids.
 
-## Cameras (extra)
-- Backend loads `/Place/Type/JamCam` once at startup and serves it at `/api/cameras` (id, name, position, image and clip URLs, available flag).
-- Browser draws available cameras as a map layer. A click opens the panel, which shows the image URL with a changing `?t=` value every 10 s and an optional MP4 clip.
-- Third-party streams are a static list in `frontend/src/data/streams.ts`, not part of the TfL data flow.
+## Live streams (extra)
+Third-party streams are a static list in `frontend/src/data/streams.ts`, not part of the TfL data flow. Entries link out, or embed in the page when a `youtubeId` is set. Street traffic cameras were removed.
