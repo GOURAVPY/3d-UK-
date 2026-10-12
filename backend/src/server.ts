@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import { fetchTrains, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
 import { loadAllLines, type Line } from "./lines.js";
+import { LineTracks } from "./positioning.js";
 
 const POLL_MS = 30_000;
 
@@ -14,6 +15,7 @@ const http = createServer(app);
 const io = new Server(http, { cors: { origin: "*" } });
 
 let lines: Line[] = [];
+const tracks = new Map<string, LineTracks>();
 let trains: Train[] = [];
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, trains: trains.length }));
@@ -25,7 +27,7 @@ io.on("connection", (socket) => socket.emit("trains", trains));
 
 async function poll() {
   try {
-    trains = await fetchTrains(lines);
+    trains = await fetchTrains(lines, tracks, POLL_MS / 1000);
     io.emit("trains", trains);
     console.log(`${new Date().toISOString()} ${trains.length} trains`);
   } catch (err) {
@@ -35,6 +37,7 @@ async function poll() {
 
 // Static data is loaded once at startup, then arrivals every 30 s.
 lines = await loadAllLines();
+for (const l of lines) tracks.set(l.id, new LineTracks(l));
 console.log(`Loaded ${lines.length} lines`);
 await poll();
 setInterval(poll, POLL_MS);
