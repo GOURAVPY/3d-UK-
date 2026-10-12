@@ -146,3 +146,10 @@ Week 4: click a train for details, follow camera, station departures board.
 ### Known limits
 - Buildings cannot be shown below zoom 13 with this map data.
 - Trains are not clickable yet (Week 4).
+
+### Bugs reported on the 3D trains (fixed)
+| Bug | Cause | Fix |
+|---|---|---|
+| Colours washed out or wrong | Lights too strong (ambient 1.1 + sun 1.6) and an extra 12% white tint | Ambient 1.0 + sun 0.9, no tint, so the roof shows the true line colour |
+| Train box cut through buildings | Tracks run in tunnels under the buildings, and the box shared the buildings' depth buffer | Clear depth before drawing trains, so they always show on top |
+| Centre of the map was a solid blob of bars | Trains drawn about 22 px long when zoomed out | 14 px long, 4.5 px wide |
