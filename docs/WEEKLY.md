@@ -37,7 +37,8 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 ## Week 4 — Train panel, follow camera, departures board 🟨
 **Goal:** click a train for details, follow mode, station departures board.
 **Done so far (extra, 2026-10-12):** airport shortcuts and a public live streams list. Street traffic cameras were built, then removed by request.
-**Still to do:** train panel, follow camera, station departures board.
+**Also done:** trains drawn as 3D instanced boxes; zoom fix.
+**Still to do:** train panel (click a train), follow camera, station departures board.
 
 ## Week 5 — Day/night, delay alerts, replay, phone polish ⬜
 **Goal:** lighting by London time, service status alerts, 24 h replay at 60x, mobile.
