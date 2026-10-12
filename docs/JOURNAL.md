@@ -176,3 +176,30 @@ Cloned to a scratch folder outside the repo, read only, not run or copied.
 ### Known limits
 - 51 links (about 10%) still straight: no OSM route within the detour limit.
 - OSM routing does not know which line a track belongs to, so on shared corridors a link may use the neighbouring line's track. Same corridor, tiny difference.
+
+## 2026-10-12 — Week 4: train panel, follow camera, departures board
+
+### What we did
+- **Click a train.** Trains are drawn by Three.js, so the map cannot hit-test them. The layer projects every train to the screen and picks the nearest one within 18 px (`pick`). The selected train is drawn 1.5x bigger and brighter.
+- **Train panel** (`TrainPanel.tsx`): line, destination, next station, arrival time and minutes, platform, current location, Follow button.
+- **Follow mode**: each animation frame the camera is moved to the train's drawn position; bearing eases toward its heading, zoom toward 16, pitch toward 62. Dragging the map stops it.
+- **Station board** (`StationPanel.tsx`): click a station dot and get a platform-screen style board. Backend `GET /api/stations/:id/arrivals` proxies TfL `/StopPoint/{id}/Arrivals`, cached 15 s so many viewers cost one TfL call; ids are validated against `^[A-Za-z0-9]+$`. Board refreshes every 15 s.
+- Station dots are de-duplicated (interchanges used to be several overlapping dots) and carry their id.
+- Phone layout: key hidden under 640 px, panels become a bottom sheet.
+
+### Checked in the browser
+- Clicked a District line train: panel showed destination Barking, next station Blackfriars, platform and "Left Temple".
+- Follow: camera tracked it east along the river; the panel moved on to Mansion House.
+- Clicked a station: board listed Jubilee trains with platforms and minutes.
+
+### Problems and fixes
+| Problem | Cause | Fix |
+|---|---|---|
+| Board header hidden behind the line key on a short window | Both anchored to the left, the board is tall | Smaller board height, key capped at 40% of the height |
+| Scrollbar clipped "min" | Scrollbar took the column width | Padding on the list |
+| Frontend dev server was down after restarting the backend | Restarting by port killed it | Start it again; keep the two servers separate |
+
+### Known limits
+- Not tried on a real phone yet (Week 5 polish).
+- A train that drops out of the feed closes its panel.
+- The board shows TfL's own platform names and sometimes repeats a destination when several trains are due.
