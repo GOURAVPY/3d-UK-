@@ -113,23 +113,40 @@ export class TrackIndex {
     return lonlat.map(([lon, lat]) => toLocal(lon, lat));
   }
 
-  // Chain through the stations in order. offsets[i] is the distance at which station i sits.
+  // Chain through the stations in order. offsets[i] is the distance at which station i
+  // sits (the start of the link leaving it); the last entry is the end of the chain.
   chain(lineId: string, ids: string[]): { chain: Chain; offsets: number[] } | null {
     const key = `${lineId}|${ids.join("|")}`;
     if (this.cache.has(key)) return this.cache.get(key)!;
     const points: [number, number][] = [];
-    const offsets: number[] = [0];
+    const starts: number[] = []; // index in points where each link begins
     let ok = ids.length >= 2;
     for (let i = 0; ok && i < ids.length - 1; i++) {
       const seg = this.link(lineId, ids[i], ids[i + 1]);
-      if (!seg) {
+      if (!seg || seg.length < 2) {
         ok = false;
         break;
       }
-      points.push(...(i === 0 ? seg : seg.slice(1)));
-      offsets.push(points.length ? makeChain(points).length : 0);
+      // Where this link starts behind where the last one ended, the join would make the
+      // train drive forward then double back. Cut the end of the previous link instead.
+      const floor = (starts.length ? starts[starts.length - 1] : 0) + 1;
+      while (points.length > floor) {
+        const last = points[points.length - 1];
+        const before = points[points.length - 2];
+        const along = (seg[0][0] - last[0]) * (last[0] - before[0]) + (seg[0][1] - last[1]) * (last[1] - before[1]);
+        if (along >= 0) break;
+        points.pop();
+      }
+      const last = points[points.length - 1];
+      const same = last && Math.hypot(seg[0][0] - last[0], seg[0][1] - last[1]) < 0.5;
+      starts.push(same ? points.length - 1 : points.length);
+      points.push(...(same ? seg.slice(1) : seg));
     }
-    const result = ok ? { chain: makeChain(points), offsets } : null;
+    let result: { chain: Chain; offsets: number[] } | null = null;
+    if (ok) {
+      const chain = makeChain(points);
+      result = { chain, offsets: [...starts.map((i) => chain.cum[i]), chain.length] };
+    }
     this.cache.set(key, result);
     return result;
   }
