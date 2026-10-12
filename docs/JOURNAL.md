@@ -127,3 +127,22 @@ Week 4: click a train for details, follow camera, station departures board.
 - Decision: street traffic cameras (TfL JamCams) removed at the owner's request. Deleted `backend/src/cameras.ts`, `/api/cameras`, the camera layer, panel, toggle and styles.
 - Kept: airport shortcuts (Heathrow, London City) and the public live streams list.
 - Fix found while cleaning up: `socket.io-client` was missing from the committed `frontend/package.json` since Week 2. Now committed, so a fresh clone builds.
+
+## 2026-10-12 — Day 3, later: 3D trains and zoom fix
+
+### What we did
+- Trains are now real 3D boxes drawn with Three.js (one `InstancedMesh`, up to 3000) inside the map's own WebGL scene. Buildings hide trains correctly and they share one camera.
+- Backend sends a `heading` per train (bearing of the track), so each box points along its track.
+- Zoomed out, trains are drawn larger (about 22 px long) so they stay visible; zoomed in they shrink to real size (110 m x 3 m x 4 m).
+- Initial zoom 13.2 so buildings show on load; minimum zoom 9.5.
+
+### Problem: buildings vanish and trains stall when zooming
+| Cause | Fix |
+|---|---|
+| Building data only exists in the map tiles from zoom 13, so zooming out below 13 cannot show buildings | Fade buildings in from 13 to 13.8, start at zoom 13.2 |
+| Trains were redrawn by replacing a GeoJSON source every frame, which made the map's worker re-process data during zooms | Trains are now a custom 3D layer, no map data is touched per frame |
+| Wrong matrix for the custom layer (nothing drawn) | Use `defaultProjectionData.mainMatrix` in this MapLibre version |
+
+### Known limits
+- Buildings cannot be shown below zoom 13 with this map data.
+- Trains are not clickable yet (Week 4).
