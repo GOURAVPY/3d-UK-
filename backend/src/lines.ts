@@ -67,7 +67,7 @@ export function applyTracks(lines: Line[], tracks: Record<string, LngLat[]>): nu
     const at = new Map(line.stations.map((s) => [s.id, [s.lon, s.lat] as LngLat]));
     const paths: LngLat[][] = [];
     for (const [x, y] of line.links) {
-      const key = x < y ? `${x}|${y}` : `${y}|${x}`;
+      const key = x < y ? `${line.id}|${x}|${y}` : `${line.id}|${y}|${x}`;
       const geom = tracks[key];
       if (geom) {
         paths.push(x < y ? geom : [...geom].reverse());

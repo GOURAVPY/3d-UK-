@@ -8,7 +8,7 @@ const SPEED: Record<string, number> = {
   "elizabeth-line": 17,
   overground: 14,
 };
-const SNAP_METRES = 150;
+const SNAP_METRES = 200;
 
 const clean = (s: string) =>
   s.toLowerCase().replace(/\(.*?\)/g, "").replace(/\b(underground|dlr|rail|station)\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();

@@ -23,7 +23,7 @@ let trackShapes: Record<string, [number, number][]> = {};
 app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, trains: trains.length }));
 app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
-// Real track shape per station link, keyed "idA|idB" (A < B), oriented A to B.
+// Real track shape per line and station link, keyed "lineId|idA|idB" (A < B), oriented A to B.
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/stations/:id/arrivals", async (req, res) => {
   const id = req.params.id;
