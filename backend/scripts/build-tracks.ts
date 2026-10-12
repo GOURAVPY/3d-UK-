@@ -64,7 +64,7 @@ function nodesNear(p: LngLat, radius: number, max: number): [number, number][] {
 // ---- A* between two stations over the graph ----
 function route(a: LngLat, b: LngLat): LngLat[] | null {
   const straight = distance(a, b);
-  const limit = straight * 2.2 + 600;
+  const limit = straight * 1.6 + 300; // a real track is never much longer than the crow-flies distance
   const starts = nodesNear(a, 400, 8);
   const goals = new Map(nodesNear(b, 400, 8));
   if (!starts.length || !goals.size) return null;
