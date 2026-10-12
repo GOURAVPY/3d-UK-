@@ -39,3 +39,8 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 2. `npx tsx scripts/build-tracks.ts` builds one graph per line from that line's own ways and routes every station link with A*, writing `data/tracks.json` keyed `lineId|stationA|stationB`. A station keeps one track node shared by the links either side of it.
 3. `npx tsx scripts/check-joins.ts` reports how far apart link ends are at stations; `node scripts/check-kinks.mjs` (server running) reports the sharpest bend under each live train.
 4. The server reads `data/tracks.json` at startup and serves it at `/api/tracks`. Re-run when TfL adds stations.
+
+## Aircraft
+1. Server: every 10 s `fetchFlights()` asks `api.adsb.lol/v2/point/51.5/-0.1/70`, keeps aircraft with a position, converts feet to metres and knots to m/s, and emits `flights`.
+2. Browser: `flights.ts` keeps each plane's last report (position, altitude, velocity vector) and draws it dead-reckoned between reports, easing any correction in over 2.5 s.
+3. Drawing: two instanced meshes (body, tail) plus a shadow; heading, pitch from climb rate, bank from roll.

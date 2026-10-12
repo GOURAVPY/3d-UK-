@@ -241,3 +241,26 @@ Cloned to a scratch folder outside the repo, read only, not run or copied.
 - Two tracks of one line (up and down) are drawn as one centre path.
 - 45 links (8%) still straight where OpenStreetMap had no usable route.
 - Interchange stations can still show a small jog where two lines' nodes differ.
+
+## 2026-10-12 — Aircraft in 3D
+
+### What we did
+- **Data:** adsb.lol (free community ADS-B feed, no key). The server polls it every 10 s for everything within 70 nm of central London and pushes it to browsers as `flights` over the same Socket.io connection. About 175 aircraft, 115 airborne, covering Heathrow, City, Luton, Stansted and the approaches to Gatwick. `GET /api/flights` too.
+- **Model** (`frontend/src/flights.ts`): built from primitives, one unit-length aeroplane merged into two instanced meshes: fuselage (capsule), swept wings, tailplane and two engines in one; the tail fin separate so it carries an airline colour (hash of the first three letters of the callsign). Plus a flat shadow on the ground under each plane.
+- **Real size by type:** a lookup of ICAO type to length (A380 73 m, A320 37 m, ATR 72 27 m ...). Zoomed out they are never smaller than 15 px.
+- **Movement:** ADS-B updates arrive every 10 s, so each plane is dead-reckoned from its last report (ground speed, track, climb rate). A new report pulls the drawn plane onto the true position over 2.5 s so nothing jumps.
+- **Attitude:** heading from track, nose pitch from climb rate, bank from the reported roll angle.
+- **Panel + follow:** click a plane for callsign, type name, registration, altitude (ft, climbing/descending), speed (kt), heading. Follow rides the camera with it.
+
+### Problems and fixes
+| Problem | Cause | Fix |
+|---|---|---|
+| Followed plane was off the top of the screen, only its shadow showed | Camera centred on the ground below a plane 1,400 m up | In follow mode, `setCenterClampedToGround(false)` and `setCenterElevation(altitude)` each frame; restored when you stop |
+| White plane invisible on the pale map | Low contrast | Darker steel-grey body, bigger when selected |
+| Could not click a moving plane in testing | Planes cover about 8 px per second on screen | Tested with a temporary hook, since removed |
+
+### Known limits
+- Positions come from aircraft that broadcast ADS-B; some military, light aircraft and aircraft with transponders off will not appear.
+- Unknown types are drawn as a 38 m narrow-body.
+- The feed is a community service with no uptime promise; the map keeps working if it fails (the poll logs and retries).
+- Planes are not hidden by buildings (they fly above them), but planes on the ground are drawn on top of terminals.
