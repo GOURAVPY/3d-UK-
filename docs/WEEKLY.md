@@ -13,13 +13,18 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Lessons:** Vite breaks the MapLibre worker unless `maplibre-gl` is excluded from pre-bundling.
 **Next week:** Week 2 below.
 
-## Week 2 — 3D map and live arrivals ⬜
+## Week 2 — 3D map and live arrivals ✅ (2026-10-12)
 **Goal:** 3D buildings; server polls arrivals every 30 s; trains shown as dots at stations.
 **Done:**
-**Not done:**
-**Lessons:**
+- Server polls TfL arrivals every 30 s and pushes trains over Socket.io; `GET /api/trains` too.
+- Trains grouped by vehicle, soonest prediction kept, placed at the next station.
+- 3D buildings, tilted camera, live train counter in the browser.
+**Not done / limits:** trains jump station to station (no position between stations yet); no DLR trains; Elizabeth line count looks high.
+**Numbers:** about 820 trains, 18 lines with trains, 19 requests per poll.
+**Lessons:** DLR predictions have no vehicleId; check every line's data shape, not just one.
+**Next week:** Week 3 below.
 
-## Week 3 — Position estimate and smooth movement ⬜
+## Week 3 — Position estimate and smooth movement 🟨
 **Goal:** estimate where each train is between stations; animate smoothly.
 
 ## Week 4 — Train panel, follow camera, departures board ⬜
