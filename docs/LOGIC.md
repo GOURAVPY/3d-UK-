@@ -15,6 +15,9 @@ The browser never talks to TfL. The key stays in `backend/.env`.
 3. Colours come from `lineColours.ts` (TfL's API has none).
 4. `GET /api/lines` returns everything. The frontend draws paths as a line layer and stations as circles.
 
+## Built (Week 2)
+Steps 1–3 and 8 below are done: polling, grouping by vehicle, soonest prediction, WebSocket push. Trains are placed at their next station. Predictions with no `vehicleId` (DLR) are skipped.
+
 ## Planned: train positions (Weeks 2–3)
 TfL gives arrival predictions, not GPS, so we estimate.
 1. Every 30 s fetch `/Line/{id}/Arrivals` per line (about 19 requests, far under 500/min).
