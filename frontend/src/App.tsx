@@ -3,7 +3,7 @@ import * as maplibregl from "maplibre-gl";
 import type { Line } from "./types";
 import { add3dBuildings } from "./buildings";
 import { drawLines } from "./drawLines";
-import { addTrainLayer, updateTrains } from "./trains";
+import { addTrainLayer, createTrainAnimator } from "./trains";
 import { useTrains } from "./useTrains";
 
 const LONDON: [number, number] = [-0.1276, 51.5072];
@@ -11,6 +11,7 @@ const LONDON: [number, number] = [-0.1276, 51.5072];
 export function App() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const animator = useRef<ReturnType<typeof createTrainAnimator> | null>(null);
   const [ready, setReady] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const { trains, updatedAt } = useTrains();
@@ -31,13 +32,17 @@ export function App() {
       add3dBuildings(map);
       drawLines(map, data);
       addTrainLayer(map);
+      animator.current = createTrainAnimator(map);
       setReady(true);
     });
-    return () => map.remove();
+    return () => {
+      animator.current?.stop();
+      map.remove();
+    };
   }, []);
 
   useEffect(() => {
-    if (ready && mapRef.current) updateTrains(mapRef.current, trains);
+    if (ready) animator.current?.update(trains);
   }, [ready, trains]);
 
   return (
