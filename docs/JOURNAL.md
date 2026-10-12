@@ -219,3 +219,25 @@ Cloned to a scratch folder outside the repo, read only, not run or copied.
 ### Known limits
 - Where a station has two possible tracks behind it (a junction), the rear carriages may follow the wrong branch for a moment.
 - Carriages are a rigid chord each; there is no articulation inside one carriage.
+
+### Bug: zigzag trains and four parallel tracks (reported with a screenshot)
+**What was seen:** a train bent in a sharp zigzag, off the line, in a corridor where the base map shows four parallel tracks and we drew one.
+
+**Measured cause:** 261 of 469 snapped links began with a jump of more than 40 m (worst 399 m) between the station point and the first track node, and every link picked whichever of the parallel tracks suited it, so consecutive links hopped between tracks.
+
+**Fix (three parts):**
+1. **Each line uses only its own track.** `fetch-osm-lines.mjs` downloads each line's OpenStreetMap route relations (133 relations, 6.7 MB). `build-tracks.ts` builds one graph per line from just those ways. Lines with no relation (Liberty, Lioness, Mildmay, Suffragette, Weaver, Windrush) fall back to the generic rail graph.
+2. **No station-point detours.** Links now start and end on track nodes, not on the station coordinate. Each station remembers the node its first link used, and later links start from the same node when a route exists, so links meet exactly.
+3. **Cleaner joins in the browser.** Shapes are keyed per line (`lineId|a|b`). When a link starts behind where the previous one ended, the overshoot is cut instead of the train doubling back. Offsets are now measured at the true link start (they ignored the join gap before).
+
+**Numbers:**
+- Links on real track: 535 of 580 (was 469 of 520).
+- Gap between the two link ends at a station: median 71 m -> 0 m; only 64 of 525 stations over 30 m (8 over 100 m), mostly interchanges.
+- Bends over 45 degrees under a live train: 5 of 697 (4 were doubling back, now cut).
+
+**Tools added:** `check-joins.ts` (gaps at stations), `check-kinks.mjs` (sharpest bend under each live train), `?view=lon,lat,zoom` URL option to open the map at a spot.
+
+### Known limits
+- Two tracks of one line (up and down) are drawn as one centre path.
+- 45 links (8%) still straight where OpenStreetMap had no usable route.
+- Interchange stations can still show a small jog where two lines' nodes differ.
