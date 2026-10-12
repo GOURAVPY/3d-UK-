@@ -107,9 +107,9 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 .alerts li p { margin: 4px 0 0; color: #c9ccd6; font-size: 12px; }
 /* Phones: nothing overlaps, panels become bottom sheets, buttons are finger sized */
 @media (max-width: 640px) {
-  .alerts { top: 60px; left: 8px; transform: none; max-width: calc(100vw - 16px); }
+  .alerts { top: 8px; left: 8px; transform: none; max-width: 175px; }
   .alerts button { font-size: 12px; padding: 6px 12px; }
-  .tools { top: 60px; }
+  .tools { top: 92px; }
   .tools button, .panel button:not(.close) { min-height: 38px; font-size: 13px; }
   .counter { padding: 6px 10px; font-size: 13px; }
   .panel.train { width: auto; }

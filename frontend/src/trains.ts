@@ -16,7 +16,7 @@ import {
   type TrackIndex,
 } from "./tracks";
 import { liftDark } from "./daynight";
-import { PICK_PX } from "./device";
+import { PICK_PX, isSmallScreen } from "./device";
 
 // Each update says where a train is now and where it will be one poll later, as
 // distances along a run of real track. The browser slides every train along that
@@ -32,7 +32,9 @@ const KEEP_LEFT = 0.25;
 // Train size in metres, a little chunkier than real so it reads as 3D. When zoomed
 // out it is drawn larger so it stays visible.
 const REAL = { length: 90, width: 7, height: 7 };
-const SCREEN_PX = { length: 22, width: 8, height: 7 };
+// on a phone the trains are drawn smaller so a crowded centre stays readable
+const PHONE = isSmallScreen ? 0.7 : 1;
+const SCREEN_PX = { length: 22 * PHONE, width: 8 * PHONE, height: 7 * PHONE };
 
 interface Glide {
   colour: string;
