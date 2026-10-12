@@ -36,3 +36,12 @@ export function pointAt(t: Track, d: number): LngLat {
   const [x1, y1] = t.coords[i];
   return [x0 + (x1 - x0) * f, y0 + (y1 - y0) * f];
 }
+
+// Compass bearing in degrees (0 = north, 90 = east) of the track at `d` metres from its start.
+export function bearingAt(t: Track, d: number): number {
+  const a = pointAt(t, Math.max(d - 15, 0));
+  const b = pointAt(t, Math.min(d + 15, t.length));
+  const east = (b[0] - a[0]) * Math.cos((a[1] * Math.PI) / 180);
+  const north = b[1] - a[1];
+  return ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
+}
