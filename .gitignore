@@ -1,2 +1,5 @@
 .env
 node_modules/
+
+# raw OpenStreetMap download (large)
+backend/data/raw/
