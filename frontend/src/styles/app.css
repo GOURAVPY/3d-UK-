@@ -28,7 +28,7 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
   border: 1px solid #ccc; background: #fff; border-radius: 6px; padding: 5px 9px; font-size: 12px; cursor: pointer;
 }
 .tools {
-  position: absolute; top: 76px; right: 12px; display: flex; flex-direction: column; gap: 6px;
+  position: absolute; top: 96px; right: 12px; display: flex; flex-direction: column; gap: 6px;
   align-items: flex-end;
 }
 .tools button.on { background: #ff6a00; color: #fff; border-color: #ff6a00; }
