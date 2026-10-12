@@ -6,6 +6,7 @@ import { drawLines } from "./drawLines";
 import { StationPanel } from "./StationPanel";
 import { Tools } from "./Tools";
 import { TrainPanel } from "./TrainPanel";
+import { TrackIndex } from "./tracks";
 import { createTrainsLayer } from "./trains";
 import { useTrains } from "./useTrains";
 
@@ -38,11 +39,16 @@ export function App() {
     mapRef.current = map;
     // style.load fires as soon as the style is ready, long before every tile has arrived
     map.once("style.load", async () => {
-      const data: Line[] = await (await fetch("/api/lines")).json();
+      const [data, shapes]: [Line[], Record<string, [number, number][]>] = await Promise.all([
+        fetch("/api/lines").then((r) => r.json()),
+        fetch("/api/tracks").then((r) => r.json()),
+      ]);
       setLines(data);
+      const stations = new globalThis.Map<string, [number, number]>();
+      for (const l of data) for (const s of l.stations) stations.set(s.id, [s.lon, s.lat]);
       add3dBuildings(map);
       drawLines(map, data);
-      trains3d.current = createTrainsLayer();
+      trains3d.current = createTrainsLayer(new TrackIndex(stations, shapes));
       map.addLayer(trains3d.current.layer);
 
       // a train wins over a station when both are under the pointer
