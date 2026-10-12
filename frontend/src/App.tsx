@@ -13,6 +13,13 @@ import { useTrains } from "./useTrains";
 const LONDON: [number, number] = [-0.1276, 51.5072];
 const FOLLOW_ZOOM = 16;
 
+// Optional ?view=lon,lat,zoom to open the map somewhere specific.
+function startView(): { center: [number, number]; zoom: number } {
+  const v = new URLSearchParams(location.search).get("view")?.split(",").map(Number);
+  if (v && v.length === 3 && v.every(Number.isFinite)) return { center: [v[0], v[1]], zoom: v[2] };
+  return { center: LONDON, zoom: 13.2 };
+}
+
 export function App() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -30,8 +37,7 @@ export function App() {
     const map = new maplibregl.Map({
       container: container.current!,
       style: "https://tiles.openfreemap.org/styles/positron",
-      center: LONDON,
-      zoom: 13.2,
+      ...startView(),
       minZoom: 9.5,
       pitch: 55,
       bearing: -15,
