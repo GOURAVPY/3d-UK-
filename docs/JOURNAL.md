@@ -203,3 +203,19 @@ Cloned to a scratch folder outside the repo, read only, not run or copied.
 - Not tried on a real phone yet (Week 5 polish).
 - A train that drops out of the feed closes its panel.
 - The board shows TfL's own platform names and sometimes repeats a destination when several trains are due.
+
+### Trains that bend with the track (Mini Tokyo 3D style)
+**Problem:** each train was one rigid straight line, so on a curve it stuck out sideways like a stick.
+
+**Fix:** like Mini Tokyo 3D, place every carriage on its own stretch of track.
+- Server sends, per train, the stations it runs along (`ids`: before, from, to, after), the index of `from`, and metres along the from-to link now (`d0`) and one poll later (`d1`). New `GET /api/tracks` serves the real track shape of every link (400 KB, loaded once).
+- Browser (`tracks.ts`) chains those link shapes into one run of track in metres, with a distance at each vertex. Past either end it extends the last segment straight, so carriages over a terminus keep a sensible heading.
+- Each carriage looks up the track at its own start and end (`pointAt`), sits halfway between them and turns to the chord, so six carriages follow a curve as a chain. Lights go at the two ends, in the end carriages' directions.
+- A train slides along the chain (`fromS` to `toS` over 30 s). On new data it continues from where it is drawn now, found by projecting that point onto the new chain.
+- Proportions: 72 m x 6 m x 6.4 m (was 100 x 5.2 x 6.2), 16 px long when zoomed out, so it reads as a block not a stick.
+
+**Checked:** all 689 trains get a chain (419 with four stations of track). Followed a Victoria line train round a corner in the browser.
+
+### Known limits
+- Where a station has two possible tracks behind it (a junction), the rear carriages may follow the wrong branch for a moment.
+- Carriages are a rigid chord each; there is no articulation inside one carriage.
