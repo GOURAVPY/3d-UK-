@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Line } from "./types";
 import { add3dBuildings } from "./buildings";
-import { drawLines } from "./drawLines";
+import { AlertsBar } from "./AlertsBar";
+import { drawLines, setAlerts } from "./drawLines";
 import { createFlightsLayer } from "./flights";
 import { FlightPanel } from "./FlightPanel";
 import { StationPanel } from "./StationPanel";
@@ -12,6 +13,7 @@ import { STYLE_DAY, STYLE_NIGHT, isNight, londonClock, type ThemeMode } from "./
 import { TrackIndex } from "./tracks";
 import { createTrainsLayer } from "./trains";
 import { useFlights } from "./useFlights";
+import { useStatus } from "./useStatus";
 import { useTrains } from "./useTrains";
 
 const LONDON: [number, number] = [-0.1276, 51.5072];
@@ -54,6 +56,7 @@ export function App() {
   const [following, setFollowing] = useState(false);
   const { trains, updatedAt } = useTrains();
   const flights = useFlights();
+  const status = useStatus();
 
   const selected = trains.find((t) => t.id === selectedId) ?? null;
   const selectedFlight = flights.find((f) => f.id === selectedFlightId) ?? null;
@@ -173,6 +176,10 @@ export function App() {
   }, [night]);
 
   useEffect(() => {
+    if (ready && mapRef.current) setAlerts(mapRef.current, status);
+  }, [ready, status, styleVersion]);
+
+  useEffect(() => {
     if (ready) trains3d.current?.update(trains);
   }, [ready, trains, styleVersion]);
 
@@ -246,6 +253,7 @@ export function App() {
         <b>{trains.length}</b> trains running now
         <small>London {londonClock(now)}{updatedAt && ` · updated ${updatedAt.toLocaleTimeString("en-GB")}`}</small>
       </div>
+      <AlertsBar status={status} />
       <Tools
         mode={mode}
         night={night}

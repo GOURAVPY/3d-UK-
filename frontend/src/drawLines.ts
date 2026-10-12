@@ -1,5 +1,5 @@
 import type { GeoJSONSource, Map } from "maplibre-gl";
-import type { Line } from "./types";
+import type { Line, LineStatus } from "./types";
 import { liftDark } from "./daynight";
 import { laneSpacingMetres, type TrackIndex } from "./tracks";
 
@@ -25,6 +25,20 @@ export function drawLines(map: Map, lines: Line[], index: TrackIndex, night: boo
       "line-width": ["interpolate", ["linear"], ["zoom"], 9, 8, 13, night ? 16 : 12, 17, night ? 28 : 20],
       "line-blur": night ? 8 : 6,
       "line-opacity": night ? 0.6 : 0.28,
+    },
+  });
+  // a pulsing halo under any line with a service problem; filled in by setAlerts()
+  map.addLayer({
+    id: "lines-alert",
+    type: "line",
+    source: "lines",
+    filter: ["in", ["get", "line"], ["literal", []]],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#ffb000",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 12, 13, 22, 17, 36],
+      "line-blur": 10,
+      "line-opacity": 0.85,
     },
   });
   map.addLayer({
@@ -101,4 +115,16 @@ export function drawLines(map: Map, lines: Line[], index: TrackIndex, night: boo
   });
 
   return () => void map.off("zoom", redraw);
+}
+
+// Light up lines that are not running a good service: amber for delays, red for severe
+// delays and closures.
+export function setAlerts(map: Map, status: LineStatus[]) {
+  if (!map.getLayer("lines-alert")) return;
+  const bad = status.filter((s) => s.severity < 10);
+  const severe = bad.filter((s) => s.severity <= 6).map((s) => s.lineId);
+  map.setFilter("lines-alert", ["in", ["get", "line"], ["literal", bad.map((s) => s.lineId)]]);
+  map.setPaintProperty("lines-alert", "line-color", [
+    "match", ["get", "line"], severe.length ? severe : ["-"], "#ff3b30", "#ffb000",
+  ]);
 }
