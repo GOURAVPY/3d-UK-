@@ -20,7 +20,16 @@ interface El {
 const NEAR_M = 260; // keep only what is within this distance of a station we draw
 const round = (n: number) => Math.round(n * 1e6) / 1e6;
 
-const lines = await loadAllLines();
+// TfL is asked first; if it is having a bad moment, the running local server has the same list.
+async function stationList() {
+  try {
+    return await loadAllLines();
+  } catch (err) {
+    console.log("TfL unavailable (" + (err instanceof Error ? err.message : err) + "), using the local server");
+    return (await (await fetch("http://localhost:3001/api/lines")).json()) as Awaited<ReturnType<typeof loadAllLines>>;
+  }
+}
+const lines = await stationList();
 const stations: LngLat[] = [
   ...new Map(lines.flatMap((l) => l.stations).map((s) => [s.id, [s.lon, s.lat] as LngLat])).values(),
 ];

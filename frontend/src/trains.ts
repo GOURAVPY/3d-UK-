@@ -91,6 +91,7 @@ export function createTrainsLayer(index: TrackIndex) {
   const meshes: THREE.InstancedMesh[] = [];
   let selected: string | null = null;
   let night = false;
+  let undergroundMode = false; // trains below ground are drawn solid, not as ghosts
   let glideMs = LIVE_GLIDE_MS; // shorter while replaying at high speed
   let ambient: THREE.AmbientLight | undefined;
   let sunLight: THREE.DirectionalLight | undefined;
@@ -207,7 +208,7 @@ export function createTrainsLayer(index: TrackIndex) {
           lastPhi = phi;
 
           const lv = levelAt(g.chain, centre);
-          const under = lv < -0.5;
+          const under = lv < -0.5 && !undergroundMode;
           const base = 1 + lv * levelHeight;
           const bodyMesh = under ? ghostBody : body;
           const windowMesh = under ? ghostWindows : windows;
@@ -243,7 +244,7 @@ export function createTrainsLayer(index: TrackIndex) {
           [s - length / 2 - 0.3, TAILLIGHT, firstPhi],
         ] as const) {
           const endLevel = levelAt(g.chain, end);
-          if (endLevel < -0.5) continue; // no bright lights on a ghost train underground
+          if (endLevel < -0.5 && !undergroundMode) continue; // no bright lights on a ghost train underground
           pointAt(g.chain, end, a);
           const n = phi === lastPhi && end > s ? headN : tailN;
           const side = (laneAt(g.chain, end) + KEEP_LEFT) * spacing;
@@ -303,6 +304,10 @@ export function createTrainsLayer(index: TrackIndex) {
 
   return {
     layer,
+    setUnderground(on: boolean) {
+      undergroundMode = on;
+      map?.triggerRepaint();
+    },
     setGlideMs(ms: number) {
       glideMs = ms;
     },

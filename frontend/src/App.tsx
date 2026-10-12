@@ -13,6 +13,7 @@ import { TrainPanel } from "./TrainPanel";
 import { MAX_PIXEL_RATIO } from "./device";
 import { STYLE_DAY, STYLE_NIGHT, isNight, londonClock, type ThemeMode } from "./daynight";
 import { TrackIndex } from "./tracks";
+import { addUndergroundLayers, setUndergroundMode } from "./underground";
 import { createTrainsLayer } from "./trains";
 import { useFlights } from "./useFlights";
 import { useStatus } from "./useStatus";
@@ -35,7 +36,10 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const flights3d = useRef<ReturnType<typeof createFlightsLayer> | null>(null);
-  const world = useRef<{ lines: Line[]; index: TrackIndex } | null>(null);
+  const world = useRef<{ lines: Line[]; index: TrackIndex; layout: { type: "FeatureCollection"; features: unknown[] } } | null>(null);
+  const [underground, setUnderground] = useState(() => new URLSearchParams(location.search).has("underground"));
+  const undergroundRef = useRef(false);
+  undergroundRef.current = underground;
   const stopLines = useRef<(() => void) | null>(null);
   const [styleVersion, setStyleVersion] = useState(0);
   // remember the theme choice (private windows may block storage, so every access is guarded)
@@ -94,29 +98,34 @@ export function App() {
     // as soon as the style is ready, long before every tile has arrived.
     map.on("style.load", async () => {
       if (!world.current) {
-        const [data, shapes, lanes, levels]: [
+        const [data, shapes, lanes, levels, layout]: [
           Line[],
           Record<string, [number, number][]>,
           Record<string, number>,
           Record<string, [number, number][]>,
+          { type: "FeatureCollection"; features: unknown[] },
         ] = await Promise.all([
           fetch("/api/lines").then((r) => r.json()),
           fetch("/api/tracks").then((r) => r.json()),
           fetch("/api/lanes").then((r) => r.json()),
           fetch("/api/levels").then((r) => r.json()),
+          fetch("/api/layout").then((r) => r.json()),
         ]);
         const stations = new globalThis.Map<string, [number, number]>();
         for (const l of data) for (const s of l.stations) stations.set(s.id, [s.lon, s.lat]);
-        world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes, levels) };
+        world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes, levels), layout };
         setLines(data);
       }
-      const { lines: data, index } = world.current;
+      const { lines: data, index, layout } = world.current;
       const dark = nightRef.current;
       stopLines.current?.();
       add3dBuildings(map, dark);
       stopLines.current = drawLines(map, data, index, dark);
+      addUndergroundLayers(map, layout, dark);
+      setUndergroundMode(map, undergroundRef.current, dark);
       trains3d.current = createTrainsLayer(index);
       trains3d.current.setNight(dark);
+      trains3d.current.setUnderground(undergroundRef.current);
       map.addLayer(trains3d.current.layer);
       flights3d.current = createFlightsLayer();
       flights3d.current.setNight(dark);
@@ -182,6 +191,13 @@ export function App() {
   useEffect(() => {
     if (ready && mapRef.current) setAlerts(mapRef.current, status);
   }, [ready, status, styleVersion]);
+
+  // Underground Mode: the city fades, the layout and tunnels come forward.
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
+    setUndergroundMode(mapRef.current, underground, night);
+    trains3d.current?.setUnderground(underground);
+  }, [ready, underground, night, styleVersion]);
 
   // While replaying, the recorded trains drive the map instead of the live feed.
   useEffect(() => {
@@ -294,6 +310,8 @@ export function App() {
       <Tools
         mode={mode}
         night={night}
+        underground={underground}
+        onToggleUnderground={() => setUnderground((u) => !u)}
         replay={replay}
         onToggleReplay={toggleReplay}
         onCycleMode={() => setMode((m) => (m === "auto" ? "day" : m === "day" ? "night" : "auto"))}
