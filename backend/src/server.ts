@@ -22,6 +22,10 @@ const tracks = new Map<string, LineTracks>();
 let trains: Train[] = [];
 let flights: Flight[] = [];
 let trackShapes: Record<string, [number, number][]> = {};
+// Underground / elevated stretches of each link: [[metresFromStart, level], ...] (-1, 0, 1).
+const levels: Record<string, [number, number][]> = existsSync("data/levels.json")
+  ? JSON.parse(readFileSync("data/levels.json", "utf8"))
+  : {};
 // How far to the left of its stored direction each link is drawn when lines share a corridor.
 const lanes: Record<string, number> = existsSync("data/lanes.json")
   ? JSON.parse(readFileSync("data/lanes.json", "utf8"))
@@ -34,6 +38,7 @@ app.get("/api/flights", (_req, res) => res.json(flights));
 // Real track shape per line and station link, keyed "lineId|idA|idB" (A < B), oriented A to B.
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/lanes", (_req, res) => res.json(lanes));
+app.get("/api/levels", (_req, res) => res.json(levels));
 app.get("/api/stations/:id/arrivals", async (req, res) => {
   const id = req.params.id;
   if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
