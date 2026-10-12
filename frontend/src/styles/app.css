@@ -6,3 +6,9 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
 }
 .key div { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
 .key i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+.counter {
+  position: absolute; top: 12px; right: 12px; background: rgba(20, 20, 24, 0.88); color: #fff;
+  padding: 8px 14px; border-radius: 8px; font-size: 14px; display: flex; flex-direction: column;
+}
+.counter b { font-size: 20px; }
+.counter small { opacity: 0.6; font-size: 11px; }
