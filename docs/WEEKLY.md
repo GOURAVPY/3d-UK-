@@ -48,6 +48,8 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 
 ## Week 5 — Day/night, delay alerts, replay, phone polish 🟨
 **Goal:** lighting by London time, service status alerts, 24 h replay at 60x, mobile.
+**Done so far:** day and night by real sunset in London, dark Mini Tokyo style glowing lanes, theme button, London clock.
+**Still to do:** live delay alerts, 24 h replay, phone polish.
 
 ## Week 6 — Demo, write-up, launch ⬜
 **Goal:** 30 s demo video, write-up on how arrival times become positions, publish. Second city after launch.

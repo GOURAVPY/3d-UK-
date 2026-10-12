@@ -49,3 +49,8 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 1. Offline: `scripts/build-lanes.ts` finds links of different lines that run alongside each other and writes `data/lanes.json`, a lane offset (in lane units, to the left of the link's stored direction) for each shared link.
 2. Browser: `laneSpacingMetres(zoom)` turns a lane unit into metres (12 px on screen, at least 14 m). Lines are drawn shifted by that amount; trains add the same offset per carriage plus a quarter lane to the left of travel.
 3. Between neighbouring links the lane eases over up to 150 m, as Mini Tokyo blends its offset sublines.
+
+## Day and night
+1. `sunElevation(date)` gives the sun's height over London; `isNight` is true below -1.5 degrees. A clock in the app re-checks every 30 s.
+2. The theme (Auto, Day, Night) picks the base map style. Changing it calls `map.setStyle`, and every `style.load` rebuilds our buildings, lanes, stations, trains and planes in the right look.
+3. Night values live next to the code that draws them: building colours, lane glow, station dots, `liftDark` for very dark lines, and lighting plus lit windows in the train and plane layers.

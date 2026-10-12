@@ -286,3 +286,22 @@ Lines sharing a corridor were drawn on top of each other, so a red and a green t
 - Lane order is by line id, so two lines can swap sides between corridors; the ease between links hides most of it.
 - Partial overlaps (a short stretch shared) get the lane of the whole link.
 - The dark Tokyo-style night map is not done: it belongs with day/night lighting in Week 5.
+
+## 2026-10-12 — Day and night (Week 5)
+
+### What we did
+- **Real sunset.** `daynight.ts` computes the sun's height over London from the date (standard low-precision astronomical formulae). Night is when the sun is more than 1.5 degrees below the horizon, so the map goes dark at real sunset (early in winter, late in summer), whatever timezone the viewer is in.
+- **Dark base map:** OpenFreeMap `dark` style, a drop-in for `positron` (same `openmaptiles` source, so the 3D buildings keep working).
+- **Night look:** buildings deep blue-grey, glow under every lane stronger (opacity 0.6, wider), station dots black with a white ring, very dark line colours (the black Northern line) lifted toward light grey so they do not vanish, train lights dimmer and train windows lit warm yellow, planes slightly brighter with darker shadows.
+- **Theme button** cycles Auto, Day, Night and is remembered in the browser (guarded, so a private window just forgets). The HUD shows London time.
+- **Switching style wipes custom layers**, so `style.load` now rebuilds buildings, lanes, stations, trains and planes every time, and a version counter makes the data effects run again.
+- Trains are bigger (90 m x 7 m x 7 m, 22 px long zoomed out) and lanes 16 px apart, so a train is wider than the lane glow, as in Mini Tokyo 3D.
+
+### Checked
+- Auto showed day at London 13:30 (viewer's own clock read 18:00; the clock shows London time correctly).
+- Night: dark map, glowing lanes, white station dots, lit windows. Day: unchanged look, larger trains.
+
+### Known limits
+- Auto cannot be seen changing without waiting for sunset; the manual button was used to check both looks.
+- The dark style is OpenFreeMap's own colours; labels are small grey.
+- Still to do in Week 5: live delay alerts, 24 h replay, phone polish.
