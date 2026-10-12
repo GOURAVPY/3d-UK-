@@ -99,3 +99,26 @@ Week 3: estimate each train's position between stations and animate smoothly.
 
 ### Next
 Week 4: click a train for details, follow camera, station departures board.
+
+## 2026-10-12 — Day 3, later: live cameras (extra)
+
+### What we did
+- Asked for live CCTV of trains and airports. Train/platform and terminal CCTV is private and not published by TfL, Network Rail or airports, so it is not possible.
+- Built the two legitimate options:
+  - TfL JamCams: 890 road traffic cameras (about 780 online), still image plus short clip, same API key. Backend `cameras.ts`, `GET /api/cameras`; frontend orange dots, click opens a panel with a live image that refreshes every 10 s and a "Play clip" button.
+  - Public live streams (third party): `frontend/src/data/streams.ts`. Entries open the source page, or embed in the panel if a `youtubeId` is added.
+- Tools box: traffic cams on/off, airport shortcuts (Heathrow, London City), live streams list.
+
+### Problems and fixes
+| Problem | Cause | Fix |
+|---|---|---|
+| Lines and trains took 10-15 s to appear | Layers were added on `load`, which waits for every tile | Add layers on `style.load` instead |
+| Tools buttons overlapped the counter | Fixed offset too small | Moved down |
+
+### Decisions
+- Did not invent YouTube video ids. Streams entries link out until a verified id is added.
+- Not every airport has TfL cameras nearby: Heathrow has about 15 within 5 km; Gatwick, Stansted and Luton are outside TfL's area.
+
+### Known limits
+- JamCams show roads near stations and airports, not the stations or platforms.
+- Third-party streams are unofficial and can go offline.
