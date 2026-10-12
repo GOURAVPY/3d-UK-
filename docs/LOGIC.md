@@ -44,3 +44,8 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 1. Server: every 10 s `fetchFlights()` asks `api.adsb.lol/v2/point/51.5/-0.1/70`, keeps aircraft with a position, converts feet to metres and knots to m/s, and emits `flights`.
 2. Browser: `flights.ts` keeps each plane's last report (position, altitude, velocity vector) and draws it dead-reckoned between reports, easing any correction in over 2.5 s.
 3. Drawing: two instanced meshes (body, tail) plus a shadow; heading, pitch from climb rate, bank from roll.
+
+## Lanes (Mini Tokyo style)
+1. Offline: `scripts/build-lanes.ts` finds links of different lines that run alongside each other and writes `data/lanes.json`, a lane offset (in lane units, to the left of the link's stored direction) for each shared link.
+2. Browser: `laneSpacingMetres(zoom)` turns a lane unit into metres (12 px on screen, at least 14 m). Lines are drawn shifted by that amount; trains add the same offset per carriage plus a quarter lane to the left of travel.
+3. Between neighbouring links the lane eases over up to 150 m, as Mini Tokyo blends its offset sublines.

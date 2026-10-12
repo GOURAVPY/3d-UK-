@@ -264,3 +264,25 @@ Cloned to a scratch folder outside the repo, read only, not run or copied.
 - Unknown types are drawn as a 38 m narrow-body.
 - The feed is a community service with no uptime promise; the map keeps working if it fails (the poll logs and retries).
 - Planes are not hidden by buildings (they fly above them), but planes on the ground are drawn on top of terminals.
+
+## 2026-10-12 — Mini Tokyo 3D style lanes
+
+### Problem (screenshots)
+Lines sharing a corridor were drawn on top of each other, so a red and a green train crossed and overlapped at an interchange, and trains running in opposite directions sat on one centre line and looked like one long train.
+
+### How Mini Tokyo 3D does it (read from its source)
+- `src/loader/features.js`: a railway can be a `sub` subline of another railway with an integer `offset`. The track is the other railway's geometry shifted sideways by `offset x unit x TRACK_SPACING` (`turf lineOffset`), where `unit = 2^(14 - zoom)`, so the gap is the same on screen at any zoom.
+- Where an offset subline joins the main one the shapes are blended with `easeInOutQuad` over a short stretch, so lanes bend into place.
+- The offsets are hand-curated per railway. Features are rebuilt for each zoom level.
+
+### What we built (automatic, no hand curation)
+- `backend/scripts/build-lanes.ts`: samples every link every 20 m, finds links of other lines running alongside (within 22 m, same direction, at least half the link), and orients links consistently by propagating "forward" through the overlap and station-adjacency graph. Lines sharing a corridor are spread evenly across it in line-id order. Output `data/lanes.json`, served at `/api/lanes`.
+- Result: of 580 links, 379 are alone, 162 are shared by 2 lines, 28 by 3, 11 by 4; 190 get a lane offset.
+- `tracks.ts`: `laneSpacingMetres(zoom)` is 12 px on screen (never under 14 m when zoomed in). `chain()` builds a lane profile per run of track, easing between neighbouring links over up to 150 m. `lineFeatures()` shifts every drawn link into its lane.
+- `drawLines.ts`: each line is a coloured lane with a soft glow layer under it, rebuilt when the zoom moves a quarter of a level.
+- `trains.ts`: every carriage steps sideways into its lane. Each direction also keeps a quarter of a lane to the left of travel (UK running), so trains passing each other no longer overlap. Train width trimmed to 4.6 m (5 px zoomed out) so it fits a lane.
+
+### Known limits
+- Lane order is by line id, so two lines can swap sides between corridors; the ease between links hides most of it.
+- Partial overlaps (a short stretch shared) get the lane of the whole link.
+- The dark Tokyo-style night map is not done: it belongs with day/night lighting in Week 5.
