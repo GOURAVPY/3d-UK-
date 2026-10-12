@@ -1,36 +1,37 @@
 import * as THREE from "three";
-import { MercatorCoordinate } from "maplibre-gl";
 import type { CustomLayerInterface, Map } from "maplibre-gl";
 import type { Train } from "./types";
+import {
+  METRE,
+  ORIGIN,
+  fromLocal,
+  pointAt,
+  project,
+  stubChain,
+  toLocal,
+  type Chain,
+  type TrackIndex,
+} from "./tracks";
 
-// Each update says where a train is now and where it will be one poll later.
-// The browser glides every train from its current spot to that target.
+// Each update says where a train is now and where it will be one poll later, as
+// distances along a run of real track. The browser slides every train along that
+// track, and each carriage is placed on its own stretch of it, so trains bend round curves.
 const GLIDE_MS = 30_000;
 const MAX_TRAINS = 3000;
 const CARS = 6;
 
-// Real train size in metres. When zoomed out we draw it larger so it stays visible.
-// a little chunkier than a real tube train (2.9 m x 3.7 m) so the model reads as 3D
-const REAL = { length: 100, width: 5.2, height: 6.2 };
-const SCREEN_PX = { length: 14, width: 4.5, height: 4 };
-
-// All positions are metres east/north of this point, so float32 stays precise.
-const ORIGIN = MercatorCoordinate.fromLngLat([-0.1276, 51.5072], 0);
-const METRE = ORIGIN.meterInMercatorCoordinateUnits();
+// Train size in metres, a little chunkier than real so it reads as 3D. When zoomed
+// out it is drawn larger so it stays visible.
+const REAL = { length: 72, width: 6, height: 6.4 };
+const SCREEN_PX = { length: 16, width: 6, height: 5 };
 
 interface Glide {
   colour: string;
-  fromLon: number;
-  fromLat: number;
-  toLon: number;
-  toLat: number;
   heading: number;
+  chain: Chain;
+  fromS: number;
+  toS: number;
   start: number;
-}
-
-function toLocal(lon: number, lat: number): [number, number] {
-  const m = MercatorCoordinate.fromLngLat([lon, lat], 0);
-  return [(m.x - ORIGIN.x) / METRE, -(m.y - ORIGIN.y) / METRE];
 }
 
 // Unit carriage: 1 wide, 1 long (along +y, centred), 1 tall, rounded roof, base on z = 0.
@@ -57,7 +58,7 @@ function bandGeometry(): THREE.BufferGeometry {
 
 // Every part is an instanced mesh drawn inside the map's own WebGL scene, so all
 // trains share one camera with the map.
-export function createTrainsLayer() {
+export function createTrainsLayer(index: TrackIndex) {
   const glides = new globalThis.Map<string, Glide>();
   let map: Map;
   let renderer: THREE.WebGLRenderer;
@@ -67,17 +68,17 @@ export function createTrainsLayer() {
   const tint = new THREE.Color();
   const HEADLIGHT = new THREE.Color(0xfff2c4);
   const TAILLIGHT = new THREE.Color(0xff2a1a);
+  const bright = new THREE.Color(0xffffff);
   let body: THREE.InstancedMesh;
   let windows: THREE.InstancedMesh;
   let skirt: THREE.InstancedMesh;
   let lights: THREE.InstancedMesh;
   const meshes: THREE.InstancedMesh[] = [];
-  const bright = new THREE.Color(0xffffff);
   let selected: string | null = null;
 
-  const position = (g: Glide, now: number): [number, number] => {
+  const slide = (g: Glide, now: number) => {
     const f = Math.min(Math.max((now - g.start) / GLIDE_MS, 0), 1);
-    return [g.fromLon + (g.toLon - g.fromLon) * f, g.fromLat + (g.toLat - g.fromLat) * f];
+    return g.fromS + (g.toS - g.fromS) * f;
   };
 
   const make = (geo: THREE.BufferGeometry, mat: THREE.Material, n: number) => {
@@ -88,6 +89,9 @@ export function createTrainsLayer() {
     meshes.push(m);
     return m;
   };
+
+  const a: [number, number] = [0, 0];
+  const b: [number, number] = [0, 0];
 
   const layer: CustomLayerInterface = {
     id: "trains-3d",
@@ -115,7 +119,7 @@ export function createTrainsLayer() {
       const width = Math.max(REAL.width, SCREEN_PX.width * metresPerPx);
       const height = Math.max(REAL.height, SCREEN_PX.height * metresPerPx);
       const pitch = length / CARS; // distance between car centres
-      const carLen = pitch * 0.94;
+      const carLen = pitch * 0.92;
 
       let trains = 0;
       let cars = 0;
@@ -124,46 +128,56 @@ export function createTrainsLayer() {
         if (trains >= MAX_TRAINS) break;
         trains++;
         const isSel = id === selected;
-        const w = isSel ? width * 1.5 : width;
-        const h = isSel ? height * 1.5 : height;
-        const [lon, lat] = position(g, now);
-        const [x, y] = toLocal(lon, lat);
-        const phi = (-g.heading * Math.PI) / 180;
-        const sin = Math.sin(phi);
-        const cos = Math.cos(phi);
+        const w = isSel ? width * 1.4 : width;
+        const h = isSel ? height * 1.4 : height;
+        const s = slide(g, now);
         tint.set(g.colour);
         if (isSel) tint.lerp(bright, 0.35);
 
+        let firstPhi = 0;
+        let lastPhi = 0;
         for (let i = 0; i < CARS; i++) {
-          const off = (i - (CARS - 1) / 2) * pitch;
-          dummy.position.set(x - off * sin, y + off * cos, 1);
+          const centre = s + (i - (CARS - 1) / 2) * pitch;
+          // each carriage spans its own stretch of track, so it turns with the curve
+          pointAt(g.chain, centre - carLen / 2, a);
+          pointAt(g.chain, centre + carLen / 2, b);
+          const dx = b[0] - a[0];
+          const dy = b[1] - a[1];
+          const phi = Math.atan2(-dx, dy);
+          if (i === 0) firstPhi = phi;
+          lastPhi = phi;
+
+          dummy.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 1);
           dummy.rotation.set(0, 0, phi);
 
-          dummy.scale.set(w, carLen, h);
+          dummy.scale.set(w, Math.hypot(dx, dy), h);
           dummy.updateMatrix();
           body.setMatrixAt(cars, dummy.matrix);
           body.setColorAt(cars, tint);
 
           // dark window band halfway up the side, a shade wider than the body
           dummy.position.z = 1 + h * 0.5;
-          dummy.scale.set(w * 1.02, carLen * 0.86, h * 0.28);
+          dummy.scale.set(w * 1.02, Math.hypot(dx, dy) * 0.86, h * 0.28);
           dummy.updateMatrix();
           windows.setMatrixAt(cars, dummy.matrix);
 
           // dark skirt over the bottom of the body
           dummy.position.z = 1;
-          dummy.scale.set(w * 1.02, carLen, h * 0.16);
+          dummy.scale.set(w * 1.02, Math.hypot(dx, dy), h * 0.16);
           dummy.updateMatrix();
           skirt.setMatrixAt(cars, dummy.matrix);
           cars++;
         }
 
         // bright headlight on the front, red tail light on the back
-        for (const [sign, colour] of [[1, HEADLIGHT], [-1, TAILLIGHT]] as const) {
-          const end = sign * (length / 2 + pitch * 0.03);
-          dummy.position.set(x - end * sin, y + end * cos, 1 + h * 0.3);
+        for (const [end, colour, phi] of [
+          [s + length / 2 + 0.3, HEADLIGHT, lastPhi],
+          [s - length / 2 - 0.3, TAILLIGHT, firstPhi],
+        ] as const) {
+          pointAt(g.chain, end, a);
+          dummy.position.set(a[0], a[1], 1 + h * 0.3);
           dummy.rotation.set(0, 0, phi);
-          dummy.scale.set(w * 0.6, Math.max(0.25, length * 0.012), h * 0.2);
+          dummy.scale.set(w * 0.6, Math.max(0.3, length * 0.012), h * 0.2);
           dummy.updateMatrix();
           lights.setMatrixAt(lamps, dummy.matrix);
           lights.setColorAt(lamps, colour);
@@ -198,6 +212,18 @@ export function createTrainsLayer() {
     },
   };
 
+  // Where a train is drawn right now, in local metres, with its compass heading.
+  const placeOf = (g: Glide, now: number) => {
+    const s = slide(g, now);
+    const p: [number, number] = [0, 0];
+    const q: [number, number] = [0, 0];
+    pointAt(g.chain, s - 6, p);
+    pointAt(g.chain, s + 6, q);
+    pointAt(g.chain, s, a);
+    const heading = ((Math.atan2(q[0] - p[0], q[1] - p[1]) * 180) / Math.PI + 360) % 360;
+    return { x: a[0], y: a[1], heading };
+  };
+
   return {
     layer,
     select(id: string | null) {
@@ -208,8 +234,9 @@ export function createTrainsLayer() {
     positionOf(id: string): { lon: number; lat: number; heading: number } | null {
       const g = glides.get(id);
       if (!g) return null;
-      const [lon, lat] = position(g, performance.now());
-      return { lon, lat, heading: g.heading };
+      const p = placeOf(g, performance.now());
+      const [lon, lat] = fromLocal(p.x, p.y);
+      return { lon, lat, heading: p.heading };
     },
     // Nearest train to a screen point, within a finger-sized radius.
     pick(x: number, y: number): string | null {
@@ -217,9 +244,10 @@ export function createTrainsLayer() {
       let best: string | null = null;
       let bestD = 18;
       for (const [id, g] of glides) {
-        const [lon, lat] = position(g, now);
-        const p = map.project([lon, lat]);
-        const d = Math.hypot(p.x - x, p.y - y);
+        const p = placeOf(g, now);
+        const [lon, lat] = fromLocal(p.x, p.y);
+        const sp = map.project([lon, lat]);
+        const d = Math.hypot(sp.x - x, sp.y - y);
         if (d < bestD) {
           bestD = d;
           best = id;
@@ -227,22 +255,34 @@ export function createTrainsLayer() {
       }
       return best;
     },
-    // New data: start each glide from where the train is drawn right now, so nothing jumps.
+    // New data: start each slide from where the train is drawn right now, so nothing jumps.
     update(trains: Train[]) {
       const now = performance.now();
       const next = new globalThis.Map<string, Glide>();
       for (const t of trains) {
+        const built = t.ids.length >= 2 ? index.chain(t.ids) : null;
+        let chain: Chain;
+        let fromS = 0;
+        let toS = 0;
+        if (built) {
+          chain = built.chain;
+          const base = built.offsets[t.fromIndex] ?? 0;
+          fromS = base + t.d0;
+          toS = base + t.d1;
+        } else {
+          // no track known: park the train at its position, facing its heading
+          const [x, y] = toLocal(t.lon, t.lat);
+          chain = stubChain(x, y, t.heading);
+        }
+
         const old = glides.get(t.id);
-        const [fromLon, fromLat] = old ? position(old, now) : [t.lon, t.lat];
-        next.set(t.id, {
-          colour: t.colour,
-          fromLon,
-          fromLat,
-          toLon: t.toLon,
-          toLat: t.toLat,
-          heading: t.heading,
-          start: now,
-        });
+        if (old && built) {
+          // continue from where it is drawn now, if that is still on this run of track
+          const p = placeOf(old, now);
+          const near = project(chain, p.x, p.y);
+          if (near.dist < 120) fromS = near.s;
+        }
+        next.set(t.id, { colour: t.colour, heading: t.heading, chain, fromS, toS, start: now });
       }
       glides.clear();
       next.forEach((g, id) => glides.set(id, g));
