@@ -226,6 +226,12 @@ export function App() {
     }
   }, [ready, trains]);
 
+  // ?station=940GZZLUWLO opens that station's panel.
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get("station");
+    if (ready && id && /^[A-Za-z0-9]+$/.test(id)) setStation({ id, name: "" });
+  }, [ready]);
+
   // The train left the feed: drop the selection.
   useEffect(() => {
     if (ready && selectedId && !selected) {
