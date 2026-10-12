@@ -66,3 +66,7 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 - **Stops:** `stopsFor(trainId)` returns the upcoming stops from the last poll for the timeline panel.
 - **History:** each poll is appended to `data/history.jsonl` as numbers only; an in-memory index of (time, offset, length) lets `GET /api/history` read slices. Trimmed to 24 h.
 - **Replay:** the browser fetches 20 minute windows, advances a virtual clock 60x faster than real time, and feeds the snapshot at or before it to the train layer with a 0.5 s glide.
+
+## Underground Mode
+1. Offline: `fetch-osm-stations.mjs` then `build-stations.ts` write `data/station-layout.json` (only features within 260 m of a station).
+2. Browser: `underground.ts` adds five hidden layers (station area, platform polygon, platform line, passage, entrance) below the lines. `setUndergroundMode` shows them and changes the paint of the buildings, surface lanes, tunnel lanes and stations; the train layer draws underground trains solid.

@@ -392,3 +392,23 @@ Checked 161 aircraft for duplicates and bad data. Found:
 ### Known limits
 - A genuine layover train that waits more than 20 minutes at a terminus is also hidden.
 - The DLR still has no trains.
+
+## 2026-10-12 — Underground Mode (after Mini Tokyo 3D)
+
+### Asked for
+Mini Tokyo 3D's Underground Mode: the surface fades, the station layouts show in violet (concourse, platforms, passages), lines and trains sit below. "I want every station like this."
+
+### Data
+- `fetch-osm-stations.mjs` downloads, in 9 tiles of Greater London, from OpenStreetMap (12,185 elements, none failed): station areas and buildings, platforms, tunnel and indoor footways, corridors and steps, subway entrances.
+- `build-stations.ts` keeps what is within 260 m of a station we draw and classifies it. Result `data/station-layout.json`, 1.9 MB, 7,611 features: 1,163 station areas, 1,106 platform polygons (+270 platform lines), 4,481 passages, 590 entrances. Served at `/api/layout`.
+- Coverage: **462 of 470 stations (98%)** have some layout within 130 m; 404 have platforms, 381 a station area, 301 passages, 283 entrances. The 8 with none are on the outer ends of the Elizabeth line and Metropolitan (Slough, Maidenhead, Reading, Amersham, Chesham ...).
+
+### Look
+- Violet station footprint (translucent), light violet platforms, thin violet passages, white entrance dots with a violet ring. All appear from zoom 13.5.
+- Mode on: buildings fade to 10%, surface lanes to 50%, tunnels go from dashed and faint to solid and bright, underground trains stop being ghosts, station dots a little bigger.
+- `🕳 Underground` button; `?underground` opens the page in the mode.
+
+### Known limits
+- Layouts are as detailed as OpenStreetMap volunteers made them. Deep tube platforms are often a single line or missing; big mainline stations (Waterloo, King's Cross) are very detailed.
+- Passages are drawn flat at ground level; real depth is not shown.
+- The layout is not tied to a particular station, so it cannot yet be highlighted when you select one.

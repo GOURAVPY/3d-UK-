@@ -22,6 +22,7 @@ TfL request rate: 19 requests per 30 s for trains (about 38 per minute) plus sta
 | TfL `/Line/{id}/Route/Sequence` | Station order and coordinates of every line | 19 lines, 470 stations | `links` (neighbouring stations) |
 | OpenStreetMap, rail ways (Overpass) | Real track geometry with tags (`tunnel`, `bridge`, `layer`, `railway`) | 12,657 ways, 97,990 points, 139 distinct tag names | `tracks.json` (580 links, 18,554 points) and `levels.json` (456 links with an underground or elevated stretch) |
 | OpenStreetMap, line route relations (Overpass) | Which ways belong to which line | 133 relations, 13,148 members | per-line track routing |
+| OpenStreetMap, station layouts (Overpass) | Station areas, platforms, underground passages, entrances | 12,185 elements near 470 stations | `station-layout.json` (7,611 features, 462 of 470 stations covered) |
 | Computed | Which lines share a corridor | 190 links with a lane offset | `lanes.json` |
 | Mini Tokyo 3D (MIT licence) | Read as a reference only; nothing copied | n/a | the lane and level design |
 
