@@ -19,6 +19,12 @@ export interface Train {
   toLat: number; // where it will be after `horizonS` seconds
   toLon: number;
   heading: number; // compass degrees, 0 = north
+  // Stations the train runs along: [before?, from, to, after?]. `fromIndex` is the index of `from`.
+  // d0/d1 are metres from `from` towards `to` now and one poll later.
+  ids: string[];
+  fromIndex: number;
+  d0: number;
+  d1: number;
 }
 
 interface Prediction {
@@ -65,12 +71,29 @@ export async function fetchTrains(
       let pos = at;
       let soon = at;
       let heading = 0;
+      let ids = [next.naptanId];
+      let fromIndex = 0;
+      let d0 = 0;
+      let d1 = 0;
       const prev = lt.prevStation(next.naptanId, preds[1]?.naptanId, next.currentLocation);
       const track = prev ? lt.trackBetween(prev, next.naptanId) : null;
       if (track) {
         pos = lt.positionAt(track, next.timeToStation);
         soon = lt.positionAt(track, next.timeToStation - horizonS);
         heading = lt.headingAt(track, next.timeToStation);
+        d0 = lt.alongAt(track, next.timeToStation);
+        d1 = lt.alongAt(track, next.timeToStation - horizonS);
+        // stations either side, so the rear and front carriages have track under them
+        ids = [prev!, next.naptanId];
+        const before = lt.neighbours(prev!).filter((n) => n !== next.naptanId);
+        if (before.length === 1) {
+          ids.unshift(before[0]);
+          fromIndex = 1;
+        }
+        const following = preds[1]?.naptanId;
+        const ahead = lt.neighbours(next.naptanId).filter((n) => n !== prev);
+        const after = following && ahead.includes(following) ? following : ahead.length === 1 ? ahead[0] : null;
+        if (after) ids.push(after);
       }
       trains.push({
         id: `${line.id}:${vehicleId}`,
@@ -89,6 +112,10 @@ export async function fetchTrains(
         toLat: soon[1],
         toLon: soon[0],
         heading,
+        ids,
+        fromIndex,
+        d0,
+        d1,
       });
     }
   });
