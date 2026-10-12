@@ -25,6 +25,12 @@ export interface Train {
   toLat: number; // where it will be one poll later
   toLon: number;
   heading: number; // compass degrees, 0 = north
+  // Stations the train runs along [before?, from, to, after?], the index of `from`, and
+  // metres from `from` towards `to` now (d0) and one poll later (d1).
+  ids: string[];
+  fromIndex: number;
+  d0: number;
+  d1: number;
 }
 
 
