@@ -28,13 +28,12 @@ export function drawLines(map: Map, lines: Line[]) {
     type: "geojson",
     data: {
       type: "FeatureCollection",
-      features: lines.flatMap((l) =>
-        l.stations.map((s) => ({
-          type: "Feature" as const,
-          properties: { name: s.name },
-          geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
-        })),
-      ),
+      // interchanges appear on several lines: keep one dot per station
+      features: [...new globalThis.Map(lines.flatMap((l) => l.stations).map((s) => [s.id, s] as const)).values()].map((s) => ({
+        type: "Feature" as const,
+        properties: { id: s.id, name: s.name },
+        geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
+      })),
     },
   });
   map.addLayer({
