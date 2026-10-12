@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import { fetchTrains, type Train } from "./arrivals.js";
 import { PORT } from "./config.js";
 import { departuresFor } from "./departures.js";
+import { fetchFlights, type Flight } from "./flights.js";
 import { applyTracks, loadAllLines, loadTrackFile, type Line } from "./lines.js";
 import { LineTracks } from "./positioning.js";
 
@@ -18,11 +19,13 @@ const io = new Server(http, { cors: { origin: "*" } });
 let lines: Line[] = [];
 const tracks = new Map<string, LineTracks>();
 let trains: Train[] = [];
+let flights: Flight[] = [];
 let trackShapes: Record<string, [number, number][]> = {};
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, trains: trains.length }));
 app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
+app.get("/api/flights", (_req, res) => res.json(flights));
 // Real track shape per line and station link, keyed "lineId|idA|idB" (A < B), oriented A to B.
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/stations/:id/arrivals", async (req, res) => {
@@ -36,7 +39,10 @@ app.get("/api/stations/:id/arrivals", async (req, res) => {
 });
 
 // New browsers get the latest trains straight away.
-io.on("connection", (socket) => socket.emit("trains", trains));
+io.on("connection", (socket) => {
+  socket.emit("trains", trains);
+  socket.emit("flights", flights);
+});
 
 async function poll() {
   try {
@@ -45,6 +51,15 @@ async function poll() {
     console.log(`${new Date().toISOString()} ${trains.length} trains`);
   } catch (err) {
     console.error("poll failed", err);
+  }
+}
+
+async function pollFlights() {
+  try {
+    flights = await fetchFlights();
+    io.emit("flights", flights);
+  } catch (err) {
+    console.error("flights poll failed", err instanceof Error ? err.message : err);
   }
 }
 
@@ -57,4 +72,7 @@ for (const l of lines) tracks.set(l.id, new LineTracks(l));
 console.log(`Loaded ${lines.length} lines`);
 await poll();
 setInterval(poll, POLL_MS);
+await pollFlights();
+console.log(`${flights.length} aircraft`);
+setInterval(pollFlights, 10_000);
 http.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
