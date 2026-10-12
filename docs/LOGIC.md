@@ -27,7 +27,7 @@ TfL gives arrival predictions, not GPS, so we estimate. Every 30 s:
 5. Remaining distance = min(timeToStation x speed, track length).
 6. Position = point on the track that far behind the next stop. Speed is a per-mode guess (tube 11, DLR 9, Elizabeth 17, Overground 14 m/s).
 7. Do the same with `timeToStation - 30` for where the train will be one poll later.
-8. Send both points and the track heading over the WebSocket. The browser glides each train from the spot it is drawn at to the new target over 30 s, every animation frame, as a 3D box in a Three.js `InstancedMesh` (`frontend/src/trains.ts`).
+8. Send the station chain (before, from, to, after) and the distances d0 and d1 along the from-to link, plus the heading. The browser builds one run of real track from the chain, slides the train along it over 30 s, and places each of the six carriages on its own stretch of that track, so the train bends round curves (`frontend/src/tracks.ts`, `frontend/src/trains.ts`).
 
 Edge cases still open: dwell time at stations, trains with a far-off next stop sit at the previous station, branches with two possible previous stations (name hint used), 429 rate limit (back off), no DLR vehicle ids.
 
