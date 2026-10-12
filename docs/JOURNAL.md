@@ -412,3 +412,21 @@ Mini Tokyo 3D's Underground Mode: the surface fades, the station layouts show in
 - Layouts are as detailed as OpenStreetMap volunteers made them. Deep tube platforms are often a single line or missing; big mainline stations (Waterloo, King's Cross) are very detailed.
 - Passages are drawn flat at ground level; real depth is not shown.
 - The layout is not tied to a particular station, so it cannot yet be highlighted when you select one.
+
+## 2026-10-12 — Display modes (read from the Mini Tokyo 3D user guide)
+
+Read https://minitokyo3d.com/docs/master/user-guide/display-modes.html and lined our modes up with it.
+
+| Mini Tokyo 3D mode | What the guide says | Ours |
+|---|---|---|
+| Full Screen | Toggle with the icon; Esc leaves | `⤢ Full screen` button using the browser Fullscreen API; Esc leaves |
+| Underground | Map darkens; overground railways, stations, trains and airplanes turn translucent, underground ones brighter. Switches on by clicking an underground train, and automatically when the tracked train changes between ground and underground | Same: surface trains and aircraft become ghosts, tunnels solid and bright. Clicking a train sets the mode from its level; following a train switches it as the train goes in or out of a tunnel, with a little hysteresis |
+| Playback | Edit date and time, speed 1x to 600x in steps (1 to 10 by 1, 10 to 100 by 10, 100 to 600 by 100); trains follow timetables; airplanes only those that day | Same controls: speed steps, "Edit date & time" with OK and Cancel (London time), range limited to what was recorded. Trains are recorded real positions, not a timetable; aircraft are hidden because they are not recorded |
+| Eco | Longer display interval for trains and airplanes to save power | Train and aircraft layers redraw about 8 times a second instead of every frame |
+
+### Differences kept
+- Playback in Mini Tokyo is a timetable simulation and can show any date; ours is a recording of real operation and only covers what the server has seen (up to 24 h).
+- Station translucency is not per station (we do not know which stations are deep); trains, lanes and aircraft carry the effect.
+
+### Plugins page (developer guide, "Adding plugins")
+Read https://minitokyo3d.com/docs/master/developer-guide/integration.html. It explains embedding the map (script tags or the `mini-tokyo-3d` npm package, with Mapbox and ODPT tokens) and adding plugins such as Precipitation and Fireworks through a `plugins: [...]` option. It does not define the plugin interface, so nothing here changes; it is a model if we want weather or events as separate optional layers later.

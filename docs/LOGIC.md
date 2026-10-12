@@ -70,3 +70,9 @@ Third-party streams are a static list in `frontend/src/data/streams.ts`, not par
 ## Underground Mode
 1. Offline: `fetch-osm-stations.mjs` then `build-stations.ts` write `data/station-layout.json` (only features within 260 m of a station).
 2. Browser: `underground.ts` adds five hidden layers (station area, platform polygon, platform line, passage, entrance) below the lines. `setUndergroundMode` shows them and changes the paint of the buildings, surface lanes, tunnel lanes and stations; the train layer draws underground trains solid.
+
+## Display modes
+- **Underground:** `undergroundMode` in the train layer decides which carriages are ghosts (above ground when on, below when off); `flights.setUnderground` makes aircraft translucent; `setUndergroundMode` changes the map layers. Clicking or following a train sets it from `levelOf(trainId)`.
+- **Eco:** `setEco` makes both 3D layers wait 125 ms between redraws.
+- **Playback:** `ReplayBar` steps speed 1..600, edits the date and time in London time, and hides aircraft.
+- **Full screen:** the browser Fullscreen API.
