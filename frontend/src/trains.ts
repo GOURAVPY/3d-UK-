@@ -72,6 +72,8 @@ export function createTrainsLayer() {
   let skirt: THREE.InstancedMesh;
   let lights: THREE.InstancedMesh;
   const meshes: THREE.InstancedMesh[] = [];
+  const bright = new THREE.Color(0xffffff);
+  let selected: string | null = null;
 
   const position = (g: Glide, now: number): [number, number] => {
     const f = Math.min(Math.max((now - g.start) / GLIDE_MS, 0), 1);
@@ -118,35 +120,39 @@ export function createTrainsLayer() {
       let trains = 0;
       let cars = 0;
       let lamps = 0;
-      for (const g of glides.values()) {
+      for (const [id, g] of glides) {
         if (trains >= MAX_TRAINS) break;
         trains++;
+        const isSel = id === selected;
+        const w = isSel ? width * 1.5 : width;
+        const h = isSel ? height * 1.5 : height;
         const [lon, lat] = position(g, now);
         const [x, y] = toLocal(lon, lat);
         const phi = (-g.heading * Math.PI) / 180;
         const sin = Math.sin(phi);
         const cos = Math.cos(phi);
         tint.set(g.colour);
+        if (isSel) tint.lerp(bright, 0.35);
 
         for (let i = 0; i < CARS; i++) {
           const off = (i - (CARS - 1) / 2) * pitch;
           dummy.position.set(x - off * sin, y + off * cos, 1);
           dummy.rotation.set(0, 0, phi);
 
-          dummy.scale.set(width, carLen, height);
+          dummy.scale.set(w, carLen, h);
           dummy.updateMatrix();
           body.setMatrixAt(cars, dummy.matrix);
           body.setColorAt(cars, tint);
 
           // dark window band halfway up the side, a shade wider than the body
-          dummy.position.z = 1 + height * 0.5;
-          dummy.scale.set(width * 1.02, carLen * 0.86, height * 0.28);
+          dummy.position.z = 1 + h * 0.5;
+          dummy.scale.set(w * 1.02, carLen * 0.86, h * 0.28);
           dummy.updateMatrix();
           windows.setMatrixAt(cars, dummy.matrix);
 
           // dark skirt over the bottom of the body
           dummy.position.z = 1;
-          dummy.scale.set(width * 1.02, carLen, height * 0.16);
+          dummy.scale.set(w * 1.02, carLen, h * 0.16);
           dummy.updateMatrix();
           skirt.setMatrixAt(cars, dummy.matrix);
           cars++;
@@ -155,9 +161,9 @@ export function createTrainsLayer() {
         // bright headlight on the front, red tail light on the back
         for (const [sign, colour] of [[1, HEADLIGHT], [-1, TAILLIGHT]] as const) {
           const end = sign * (length / 2 + pitch * 0.03);
-          dummy.position.set(x - end * sin, y + end * cos, 1 + height * 0.3);
+          dummy.position.set(x - end * sin, y + end * cos, 1 + h * 0.3);
           dummy.rotation.set(0, 0, phi);
-          dummy.scale.set(width * 0.6, Math.max(0.25, length * 0.012), height * 0.2);
+          dummy.scale.set(w * 0.6, Math.max(0.25, length * 0.012), h * 0.2);
           dummy.updateMatrix();
           lights.setMatrixAt(lamps, dummy.matrix);
           lights.setColorAt(lamps, colour);
@@ -194,6 +200,33 @@ export function createTrainsLayer() {
 
   return {
     layer,
+    select(id: string | null) {
+      selected = id;
+      map?.triggerRepaint();
+    },
+    // Where a train is drawn right now, for follow mode.
+    positionOf(id: string): { lon: number; lat: number; heading: number } | null {
+      const g = glides.get(id);
+      if (!g) return null;
+      const [lon, lat] = position(g, performance.now());
+      return { lon, lat, heading: g.heading };
+    },
+    // Nearest train to a screen point, within a finger-sized radius.
+    pick(x: number, y: number): string | null {
+      const now = performance.now();
+      let best: string | null = null;
+      let bestD = 18;
+      for (const [id, g] of glides) {
+        const [lon, lat] = position(g, now);
+        const p = map.project([lon, lat]);
+        const d = Math.hypot(p.x - x, p.y - y);
+        if (d < bestD) {
+          bestD = d;
+          best = id;
+        }
+      }
+      return best;
+    },
     // New data: start each glide from where the train is drawn right now, so nothing jumps.
     update(trains: Train[]) {
       const now = performance.now();
