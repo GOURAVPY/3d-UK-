@@ -1,5 +1,6 @@
 import { tfl } from "./tfl.js";
 import type { Line } from "./lines.js";
+import type { LineTracks } from "./positioning.js";
 
 export interface Train {
   id: string; // lineId:vehicleId
@@ -13,8 +14,10 @@ export interface Train {
   currentLocation: string;
   secondsToNext: number;
   expectedArrival: string;
-  lat: number;
+  lat: number; // estimated position now
   lon: number;
+  toLat: number; // where it will be after `horizonS` seconds
+  toLon: number;
 }
 
 interface Prediction {
@@ -30,9 +33,13 @@ interface Prediction {
 }
 
 // One request per line. The same train appears in many stations' predictions,
-// so group by line + vehicle and keep the soonest arrival.
-export async function fetchTrains(lines: Line[]): Promise<Train[]> {
-  const stationById = new Map(lines.flatMap((l) => l.stations.map((s) => [s.id, s] as const)));
+// so group by vehicle: its soonest prediction is the next stop, the one after
+// that tells us which way it is heading.
+export async function fetchTrains(
+  lines: Line[],
+  tracks: Map<string, LineTracks>,
+  horizonS: number,
+): Promise<Train[]> {
   const results = await Promise.allSettled(
     lines.map((l) => tfl<Prediction[]>(`/Line/${l.id}/Arrivals`)),
   );
@@ -40,31 +47,44 @@ export async function fetchTrains(lines: Line[]): Promise<Train[]> {
   results.forEach((r, i) => {
     if (r.status !== "fulfilled") return;
     const line = lines[i];
-    const soonest = new Map<string, Prediction>();
+    const lt = tracks.get(line.id)!;
+    const byVehicle = new Map<string, Prediction[]>();
     for (const p of r.value) {
       // DLR predictions have no vehicleId, so those trains cannot be told apart
       if (!p.vehicleId) continue;
-      const key = p.vehicleId;
-      const best = soonest.get(key);
-      if (!best || p.timeToStation < best.timeToStation) soonest.set(key, p);
+      if (!byVehicle.has(p.vehicleId)) byVehicle.set(p.vehicleId, []);
+      byVehicle.get(p.vehicleId)!.push(p);
     }
-    for (const p of soonest.values()) {
-      const st = stationById.get(p.naptanId);
-      if (!st) continue; // no coordinates for this stop
+    for (const [vehicleId, preds] of byVehicle) {
+      preds.sort((a, b) => a.timeToStation - b.timeToStation);
+      const next = preds[0];
+      const at = lt.station(next.naptanId);
+      if (!at) continue; // no coordinates for this stop
+
+      let pos = at;
+      let soon = at;
+      const prev = lt.prevStation(next.naptanId, preds[1]?.naptanId, next.currentLocation);
+      const track = prev ? lt.trackBetween(prev, next.naptanId) : null;
+      if (track) {
+        pos = lt.positionAt(track, next.timeToStation);
+        soon = lt.positionAt(track, next.timeToStation - horizonS);
+      }
       trains.push({
-        id: `${line.id}:${p.vehicleId}`,
+        id: `${line.id}:${vehicleId}`,
         lineId: line.id,
         lineName: line.name,
         colour: line.colour,
-        nextStationId: p.naptanId,
-        nextStation: p.stationName,
-        destination: p.destinationName ?? "",
-        platform: p.platformName,
-        currentLocation: p.currentLocation,
-        secondsToNext: p.timeToStation,
-        expectedArrival: p.expectedArrival,
-        lat: st.lat,
-        lon: st.lon,
+        nextStationId: next.naptanId,
+        nextStation: next.stationName,
+        destination: next.destinationName ?? "",
+        platform: next.platformName,
+        currentLocation: next.currentLocation,
+        secondsToNext: next.timeToStation,
+        expectedArrival: next.expectedArrival,
+        lat: pos[1],
+        lon: pos[0],
+        toLat: soon[1],
+        toLon: soon[0],
       });
     }
   });
