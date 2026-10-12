@@ -9,7 +9,14 @@ const TYPE_NAMES: Record<string, string> = {
 };
 
 // Details of one clicked aircraft.
-export function FlightPanel({ flight, onClose }: { flight: Flight; onClose: () => void }) {
+interface Props {
+  flight: Flight;
+  following: boolean;
+  onFollow: () => void;
+  onClose: () => void;
+}
+
+export function FlightPanel({ flight, following, onFollow, onClose }: Props) {
   const feet = Math.round((flight.altM / 0.3048) / 100) * 100;
   const knots = Math.round(flight.speedMs / 0.514444);
   const climbing = flight.climbMs > 1 ? "climbing" : flight.climbMs < -1 ? "descending" : "level";
@@ -30,7 +37,10 @@ export function FlightPanel({ flight, onClose }: { flight: Flight; onClose: () =
         <dd>{Math.round(flight.track)}°</dd>
       </dl>
       <div className="row">
-        <small>Live ADS-B data from adsb.lol, refreshed every 10 s</small>
+        <button className={following ? "on" : ""} onClick={onFollow}>
+          {following ? "Stop following" : "Follow this aircraft"}
+        </button>
+        <small>Live ADS-B data from adsb.lol</small>
       </div>
     </div>
   );

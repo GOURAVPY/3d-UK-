@@ -137,12 +137,15 @@ export function App() {
   // Follow mode: the camera rides along with the train until the user drags the map.
   useEffect(() => {
     const map = mapRef.current;
-    if (!ready || !following || !selectedId || !map) return;
+    const targetId = selectedId ?? selectedFlightId;
+    if (!ready || !following || !targetId || !map) return;
     let raf = 0;
     const stop = () => setFollowing(false);
     map.on("dragstart", stop);
     const tick = () => {
-      const p = trains3d.current?.positionOf(selectedId);
+      const p = selectedId
+        ? trains3d.current?.positionOf(targetId)
+        : flights3d.current?.positionOf(targetId);
       if (p) {
         const delta = ((p.heading - map.getBearing() + 540) % 360) - 180; // shortest turn
         map.jumpTo({
@@ -159,7 +162,7 @@ export function App() {
       cancelAnimationFrame(raf);
       map.off("dragstart", stop);
     };
-  }, [ready, following, selectedId]);
+  }, [ready, following, selectedId, selectedFlightId]);
 
   const closeTrain = () => {
     setSelectedId(null);
@@ -185,7 +188,15 @@ export function App() {
         />
       )}
       {selectedFlight && !selected && (
-        <FlightPanel flight={selectedFlight} onClose={() => setSelectedFlightId(null)} />
+        <FlightPanel
+          flight={selectedFlight}
+          following={following}
+          onFollow={() => setFollowing((v) => !v)}
+          onClose={() => {
+            setSelectedFlightId(null);
+            setFollowing(false);
+          }}
+        />
       )}
       {station && !selected && !selectedFlight && (
         <StationPanel stationId={station.id} name={station.name} onClose={() => setStation(null)} />

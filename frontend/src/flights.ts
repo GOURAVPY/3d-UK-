@@ -215,6 +215,14 @@ export function createFlightsLayer() {
       selected = id;
       map?.triggerRepaint();
     },
+    // Where an aircraft is drawn right now, for follow mode.
+    positionOf(id: string): { lon: number; lat: number; heading: number } | null {
+      const p = planes.get(id);
+      if (!p) return null;
+      const at = place(p, performance.now());
+      const [lon, lat] = fromLocal(at.x, at.y);
+      return { lon, lat, heading: p.track };
+    },
     // Nearest aircraft to a screen point, within a finger-sized radius.
     pick(x: number, y: number): string | null {
       const now = performance.now();
