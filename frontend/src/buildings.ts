@@ -17,7 +17,8 @@ export function add3dBuildings(map: Map) {
       ],
       "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
       "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-      "fill-extrusion-opacity": 0.85,
+      // building data only exists from zoom 13, so fade in rather than pop
+      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.8, 0.85],
     },
   });
 }
