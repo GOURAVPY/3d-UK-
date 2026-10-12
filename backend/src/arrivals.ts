@@ -119,5 +119,30 @@ export async function fetchTrains(
       });
     }
   });
+  queueWaitingTrains(trains);
   return trains;
+}
+
+// Trains whose next arrival is far off are placed at the station they just left, so several
+// can end up on exactly the same spot. Line them up behind the platform instead, soonest
+// departure at the front, one train length apart.
+const QUEUE_GAP_M = 105;
+const MAX_QUEUED = 6;
+
+function queueWaitingTrains(trains: Train[]): void {
+  const waiting = new Map<string, Train[]>();
+  for (const t of trains) {
+    if (t.ids.length < 2 || t.d0 > 0.5) continue; // moving, or no track under it
+    const key = t.ids[t.fromIndex]; // everything leaving this station shares its approach
+    if (!waiting.has(key)) waiting.set(key, []);
+    waiting.get(key)!.push(t);
+  }
+  for (const group of waiting.values()) {
+    group.sort((x, y) => x.secondsToNext - y.secondsToNext);
+    group.forEach((t, k) => {
+      const back = (k % MAX_QUEUED) * QUEUE_GAP_M;
+      t.d0 -= back;
+      t.d1 -= back;
+    });
+  }
 }
