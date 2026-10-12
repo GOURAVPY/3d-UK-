@@ -42,3 +42,28 @@ Template for a new entry: date, time span, what we did, problems, decisions, nex
 
 ### Next
 Week 2: 3D buildings, server polls arrivals every 30 s, trains as dots at stations.
+
+## 2026-10-12 — Day 2 (Week 2)
+
+### What we did
+- Backend: added Socket.io. New `arrivals.ts` fetches `/Line/{id}/Arrivals` for every line, groups predictions by `vehicleId` and keeps the soonest one per train.
+- Server polls every 30 s, pushes `trains` to all browsers, and serves `GET /api/trains`. New browsers get the latest list on connect.
+- Frontend: 3D buildings (`fill-extrusion` from the OpenFreeMap `building` layer), tilted camera (pitch 55), live train dots at each train's next station, live counter.
+- Result: about 820 trains on the first poll, 829 in the browser.
+
+### Problems and fixes
+| Problem | Cause | Fix |
+|---|---|---|
+| DLR showed 1 train | DLR predictions have an empty `vehicleId`, so all collapsed to one key | Skip predictions with no `vehicleId`. DLR has no trains until we find another source |
+| Buildings looked flat | Pale colour, and shown only from zoom 13 | Colour by height. Zoom in to see them |
+
+### Decisions
+- Trains sit at their next station for now. Real positions between stations come in Week 3.
+- Browser gets trains over a WebSocket (via Vite proxy), never from TfL.
+
+### Known limits
+- No DLR trains (no vehicle ids in the feed).
+- Elizabeth line count (about 128) looks high. Check in Week 3 whether vehicle ids repeat.
+
+### Next
+Week 3: estimate each train's position between stations and animate smoothly.
