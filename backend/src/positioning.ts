@@ -41,8 +41,11 @@ export class LineTracks {
   }
 
   // The station behind a train: a neighbour of its next stop that is not the stop after it.
+  // At a terminus the stop after is the same neighbour (the train turns back), so keep it then.
   prevStation(next: string, following: string | undefined, hint: string): string | null {
-    const options = [...(this.near.get(next) ?? [])].filter((id) => id !== following);
+    const all = [...(this.near.get(next) ?? [])];
+    const ahead = all.filter((id) => id !== following);
+    const options = ahead.length ? ahead : all;
     if (options.length <= 1) return options[0] ?? null;
     const h = clean(hint);
     return options.find((id) => h.includes(this.name.get(id) ?? "\0")) ?? options[0];
