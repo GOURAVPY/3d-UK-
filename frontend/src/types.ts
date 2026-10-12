@@ -26,15 +26,6 @@ export interface Train {
   toLon: number;
 }
 
-export interface Camera {
-  id: string;
-  name: string;
-  lat: number;
-  lon: number;
-  imageUrl: string;
-  videoUrl: string;
-  available: boolean;
-}
 
 // A public live stream. `youtubeId` embeds it; without one we only link out.
 export interface Stream {
