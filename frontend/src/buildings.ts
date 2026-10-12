@@ -1,7 +1,8 @@
 import type { Map } from "maplibre-gl";
 
-// Replace the flat building fill with extruded 3D buildings.
-export function add3dBuildings(map: Map) {
+// Replace the flat building fill with extruded 3D buildings. Taller buildings are shaded
+// differently so the skyline reads in 3D: pale grey by day, deep blue-grey at night.
+export function add3dBuildings(map: Map, night: boolean) {
   if (map.getLayer("building")) map.setLayoutProperty("building", "visibility", "none");
   map.addLayer({
     id: "buildings-3d",
@@ -10,15 +11,16 @@ export function add3dBuildings(map: Map) {
     "source-layer": "building",
     minzoom: 13,
     paint: {
-      // taller buildings get darker so the skyline reads in 3D
       "fill-extrusion-color": [
         "interpolate", ["linear"], ["coalesce", ["get", "render_height"], 8],
-        0, "#e4e4df", 40, "#c4c4c0", 150, "#9a9a98",
+        0, night ? "#1b1e2b" : "#e4e4df",
+        40, night ? "#272c40" : "#c4c4c0",
+        150, night ? "#3a4263" : "#9a9a98",
       ],
       "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
       "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
       // building data only exists from zoom 13, so fade in rather than pop
-      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.8, 0.85],
+      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.8, night ? 0.92 : 0.85],
     },
   });
 }
