@@ -277,7 +277,8 @@ export function createFlightsLayer() {
           id: f.id,
           callsign: f.callsign,
           colour: old?.colour ?? airlineColour(f.callsign || f.id),
-          length: LENGTH[f.type] ?? DEFAULT_LENGTH,
+          // helicopters (category A7) are far smaller than the narrow-body default
+          length: LENGTH[f.type] ?? (f.category === "A7" ? 14 : DEFAULT_LENGTH),
           x,
           y,
           z: f.altM,

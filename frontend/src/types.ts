@@ -69,6 +69,7 @@ export interface Flight {
   track: number;
   climbMs: number;
   roll: number;
+  category: string;
 }
 
 export interface LineStatus {
