@@ -57,9 +57,11 @@ export async function loadAllLines(): Promise<Line[]> {
 }
 
 // Real track shapes built by scripts/build-tracks.ts. Without the file we keep TfL's coarse paths.
-export function applyTracks(lines: Line[], file = "data/tracks.json"): number {
-  if (!existsSync(file)) return 0;
-  const tracks = JSON.parse(readFileSync(file, "utf8")) as Record<string, LngLat[]>;
+export function loadTrackFile(file = "data/tracks.json"): Record<string, LngLat[]> {
+  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as Record<string, LngLat[]>) : {};
+}
+
+export function applyTracks(lines: Line[], tracks: Record<string, LngLat[]>): number {
   let used = 0;
   for (const line of lines) {
     const at = new Map(line.stations.map((s) => [s.id, [s.lon, s.lat] as LngLat]));
