@@ -5,6 +5,8 @@ import {
   METRE,
   ORIGIN,
   fromLocal,
+  laneAt,
+  laneSpacingMetres,
   pointAt,
   project,
   stubChain,
@@ -20,10 +22,14 @@ const GLIDE_MS = 30_000;
 const MAX_TRAINS = 3000;
 const CARS = 6;
 
+// Trains run on the left, as in the UK: each direction sits a quarter of a lane to the
+// left of travel, so trains passing each other no longer overlap on one centre line.
+const KEEP_LEFT = 0.25;
+
 // Train size in metres, a little chunkier than real so it reads as 3D. When zoomed
 // out it is drawn larger so it stays visible.
-const REAL = { length: 72, width: 6, height: 6.4 };
-const SCREEN_PX = { length: 16, width: 6, height: 5 };
+const REAL = { length: 72, width: 4.6, height: 5.6 };
+const SCREEN_PX = { length: 16, width: 5, height: 4.5 };
 
 interface Glide {
   colour: string;
@@ -118,6 +124,7 @@ export function createTrainsLayer(index: TrackIndex) {
       const length = Math.max(REAL.length, SCREEN_PX.length * metresPerPx);
       const width = Math.max(REAL.width, SCREEN_PX.width * metresPerPx);
       const height = Math.max(REAL.height, SCREEN_PX.height * metresPerPx);
+      const spacing = laneSpacingMetres(map.getZoom());
       const pitch = length / CARS; // distance between car centres
       const carLen = pitch * 0.92;
 
@@ -136,11 +143,31 @@ export function createTrainsLayer(index: TrackIndex) {
 
         let firstPhi = 0;
         let lastPhi = 0;
+        const tailN: [number, number] = [0, 0];
+        const headN: [number, number] = [0, 0];
         for (let i = 0; i < CARS; i++) {
           const centre = s + (i - (CARS - 1) / 2) * pitch;
           // each carriage spans its own stretch of track, so it turns with the curve
-          pointAt(g.chain, centre - carLen / 2, a);
-          pointAt(g.chain, centre + carLen / 2, b);
+          const sa = centre - carLen / 2;
+          const sb = centre + carLen / 2;
+          pointAt(g.chain, sa, a);
+          pointAt(g.chain, sb, b);
+          // step sideways into the line's lane (to the left of the direction of travel)
+          const cl = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+          const nx = -(b[1] - a[1]) / cl;
+          const ny = (b[0] - a[0]) / cl;
+          const oa = (laneAt(g.chain, sa) + KEEP_LEFT) * spacing;
+          const ob = (laneAt(g.chain, sb) + KEEP_LEFT) * spacing;
+          a[0] += nx * oa;
+          a[1] += ny * oa;
+          b[0] += nx * ob;
+          b[1] += ny * ob;
+          if (i === 0) {
+            tailN[0] = nx;
+            tailN[1] = ny;
+          }
+          headN[0] = nx;
+          headN[1] = ny;
           const dx = b[0] - a[0];
           const dy = b[1] - a[1];
           const phi = Math.atan2(-dx, dy);
@@ -175,6 +202,10 @@ export function createTrainsLayer(index: TrackIndex) {
           [s - length / 2 - 0.3, TAILLIGHT, firstPhi],
         ] as const) {
           pointAt(g.chain, end, a);
+          const n = phi === lastPhi && end > s ? headN : tailN;
+          const side = (laneAt(g.chain, end) + KEEP_LEFT) * spacing;
+          a[0] += n[0] * side;
+          a[1] += n[1] * side;
           dummy.position.set(a[0], a[1], 1 + h * 0.3);
           dummy.rotation.set(0, 0, phi);
           dummy.scale.set(w * 0.6, Math.max(0.3, length * 0.012), h * 0.2);
@@ -213,7 +244,7 @@ export function createTrainsLayer(index: TrackIndex) {
   };
 
   // Where a train is drawn right now, in local metres, with its compass heading.
-  const placeOf = (g: Glide, now: number) => {
+  const placeOf = (g: Glide, now: number, withLane = true) => {
     const s = slide(g, now);
     const p: [number, number] = [0, 0];
     const q: [number, number] = [0, 0];
@@ -221,7 +252,9 @@ export function createTrainsLayer(index: TrackIndex) {
     pointAt(g.chain, s + 6, q);
     pointAt(g.chain, s, a);
     const heading = ((Math.atan2(q[0] - p[0], q[1] - p[1]) * 180) / Math.PI + 360) % 360;
-    return { x: a[0], y: a[1], heading };
+    const dl = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    const side = withLane ? (laneAt(g.chain, s) + KEEP_LEFT) * laneSpacingMetres(map.getZoom()) : 0;
+    return { x: a[0] - ((q[1] - p[1]) / dl) * side, y: a[1] + ((q[0] - p[0]) / dl) * side, heading };
   };
 
   return {
@@ -278,7 +311,7 @@ export function createTrainsLayer(index: TrackIndex) {
         const old = glides.get(t.id);
         if (old && built) {
           // continue from where it is drawn now, if that is still on this run of track
-          const p = placeOf(old, now);
+          const p = placeOf(old, now, false); // on the track itself, without the lane offset
           const near = project(chain, p.x, p.y);
           if (near.dist < 120) fromS = near.s;
         }
