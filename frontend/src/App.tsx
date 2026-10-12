@@ -87,15 +87,20 @@ export function App() {
     // as soon as the style is ready, long before every tile has arrived.
     map.on("style.load", async () => {
       if (!world.current) {
-        const [data, shapes, lanes]: [Line[], Record<string, [number, number][]>, Record<string, number>] =
-          await Promise.all([
-            fetch("/api/lines").then((r) => r.json()),
-            fetch("/api/tracks").then((r) => r.json()),
-            fetch("/api/lanes").then((r) => r.json()),
-          ]);
+        const [data, shapes, lanes, levels]: [
+          Line[],
+          Record<string, [number, number][]>,
+          Record<string, number>,
+          Record<string, [number, number][]>,
+        ] = await Promise.all([
+          fetch("/api/lines").then((r) => r.json()),
+          fetch("/api/tracks").then((r) => r.json()),
+          fetch("/api/lanes").then((r) => r.json()),
+          fetch("/api/levels").then((r) => r.json()),
+        ]);
         const stations = new globalThis.Map<string, [number, number]>();
         for (const l of data) for (const s of l.stations) stations.set(s.id, [s.lon, s.lat]);
-        world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes) };
+        world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes, levels) };
         setLines(data);
       }
       const { lines: data, index } = world.current;

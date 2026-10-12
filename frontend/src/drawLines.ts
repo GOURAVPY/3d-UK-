@@ -11,10 +11,14 @@ export function drawLines(map: Map, lines: Line[], index: TrackIndex, night: boo
   const empty = { type: "FeatureCollection" as const, features: [] };
   map.addSource("lines", { type: "geojson", data: empty });
 
+  // Three kinds of track, as in Mini Tokyo 3D: underground is faint and dashed, elevated
+  // (bridge or viaduct) sits on a pale casing, surface is the plain glowing lane.
+  const notTunnel: ["!=", ["get", string], number] = ["!=", ["get", "level"], -1];
   map.addLayer({
     id: "lines-glow",
     type: "line",
     source: "lines",
+    filter: notTunnel,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": ["get", "colour"],
@@ -24,9 +28,35 @@ export function drawLines(map: Map, lines: Line[], index: TrackIndex, night: boo
     },
   });
   map.addLayer({
+    id: "lines-tunnel",
+    type: "line",
+    source: "lines",
+    filter: ["==", ["get", "level"], -1],
+    layout: { "line-cap": "butt", "line-join": "round" },
+    paint: {
+      "line-color": ["get", "colour"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 1.5, 13, 2.5, 17, 4],
+      "line-opacity": night ? 0.55 : 0.5,
+      "line-dasharray": [1.4, 1.6],
+    },
+  });
+  map.addLayer({
+    id: "lines-bridge-casing",
+    type: "line",
+    source: "lines",
+    filter: ["==", ["get", "level"], 1],
+    layout: { "line-cap": "butt", "line-join": "round" },
+    paint: {
+      "line-color": night ? "#ffffff" : "#2b2b30",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 9, 5, 13, 8, 17, 12],
+      "line-opacity": night ? 0.85 : 0.75,
+    },
+  });
+  map.addLayer({
     id: "lines",
     type: "line",
     source: "lines",
+    filter: notTunnel,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
       "line-color": ["get", "colour"],
