@@ -62,3 +62,5 @@ html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif;
   .tools { top: 84px; right: 8px; }
   .counter { right: 8px; top: 8px; }
 }
+.board ol { padding-right: 10px; scrollbar-width: thin; }
+.board b { white-space: nowrap; }
