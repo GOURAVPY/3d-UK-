@@ -7,6 +7,7 @@ import { PORT } from "./config.js";
 import { existsSync, readFileSync } from "node:fs";
 import { departuresFor } from "./departures.js";
 import { fetchFlights, type Flight } from "./flights.js";
+import { fetchStatus, type LineStatus } from "./status.js";
 import { applyTracks, loadAllLines, loadTrackFile, type Line } from "./lines.js";
 import { LineTracks } from "./positioning.js";
 
@@ -21,6 +22,7 @@ let lines: Line[] = [];
 const tracks = new Map<string, LineTracks>();
 let trains: Train[] = [];
 let flights: Flight[] = [];
+let status: LineStatus[] = [];
 let trackShapes: Record<string, [number, number][]> = {};
 // Underground / elevated stretches of each link: [[metresFromStart, level], ...] (-1, 0, 1).
 const levels: Record<string, [number, number][]> = existsSync("data/levels.json")
@@ -35,6 +37,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, lines: lines.length, 
 app.get("/api/lines", (_req, res) => res.json(lines));
 app.get("/api/trains", (_req, res) => res.json(trains));
 app.get("/api/flights", (_req, res) => res.json(flights));
+app.get("/api/status", (_req, res) => res.json(status));
 // Upcoming stops of one train (id like "victoria:213"), for its timeline panel.
 app.get("/api/trains/:id/stops", (req, res) => {
   if (!/^[a-z-]+:[A-Za-z0-9_-]+$/.test(req.params.id)) return res.status(400).json({ error: "bad train id" });
@@ -60,6 +63,7 @@ app.get("/api/stations/:id/arrivals", async (req, res) => {
 io.on("connection", (socket) => {
   socket.emit("trains", trains);
   socket.emit("flights", flights);
+  socket.emit("status", status);
 });
 
 async function poll() {
@@ -81,6 +85,15 @@ async function pollFlights() {
   }
 }
 
+async function pollStatus() {
+  try {
+    status = await fetchStatus();
+    io.emit("status", status);
+  } catch (err) {
+    console.error("status poll failed", err instanceof Error ? err.message : err);
+  }
+}
+
 // Static data is loaded once at startup, then arrivals every 30 s.
 lines = await loadAllLines();
 trackShapes = loadTrackFile();
@@ -93,4 +106,6 @@ setInterval(poll, POLL_MS);
 await pollFlights();
 console.log(`${flights.length} aircraft`);
 setInterval(pollFlights, 10_000);
+await pollStatus();
+setInterval(pollStatus, 120_000);
 http.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
