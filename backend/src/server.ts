@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { departuresFor } from "./departures.js";
 import { historyInfo, initHistory, readHistory, recordSnapshot } from "./history.js";
 import { fetchFlights, type Flight } from "./flights.js";
+import { stationDetails } from "./stationDetails.js";
 import { fetchStatus, type LineStatus } from "./status.js";
 import { applyTracks, loadAllLines, loadTrackFile, type Line } from "./lines.js";
 import { LineTracks } from "./positioning.js";
@@ -58,6 +59,15 @@ app.get("/api/trains/:id/stops", (req, res) => {
 app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/lanes", (_req, res) => res.json(lanes));
 app.get("/api/levels", (_req, res) => res.json(levels));
+app.get("/api/stations/:id/details", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
+  try {
+    res.json(await stationDetails(id));
+  } catch {
+    res.status(502).json({ error: "TfL unavailable" });
+  }
+});
 app.get("/api/stations/:id/arrivals", async (req, res) => {
   const id = req.params.id;
   if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
