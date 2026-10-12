@@ -31,7 +31,8 @@ export function App() {
       bearing: -15,
     });
     mapRef.current = map;
-    map.on("load", async () => {
+    // style.load fires as soon as the style is ready, long before every tile has arrived
+    map.once("style.load", async () => {
       const [data, cams]: [Line[], Camera[]] = await Promise.all([
         fetch("/api/lines").then((r) => r.json()),
         fetch("/api/cameras").then((r) => r.json()),
