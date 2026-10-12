@@ -70,3 +70,11 @@ export interface Flight {
   climbMs: number;
   roll: number;
 }
+
+export interface LineStatus {
+  lineId: string;
+  lineName: string;
+  severity: number; // 10 good service, 9 minor delays, 6 severe delays, lower is worse
+  text: string;
+  reason: string;
+}
