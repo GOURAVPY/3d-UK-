@@ -4,7 +4,7 @@ import type { Line } from "./types";
 import { add3dBuildings } from "./buildings";
 import { drawLines } from "./drawLines";
 import { Tools } from "./Tools";
-import { addTrainLayer, createTrainAnimator } from "./trains";
+import { createTrainsLayer } from "./trains";
 import { useTrains } from "./useTrains";
 
 const LONDON: [number, number] = [-0.1276, 51.5072];
@@ -12,7 +12,7 @@ const LONDON: [number, number] = [-0.1276, 51.5072];
 export function App() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const animator = useRef<ReturnType<typeof createTrainAnimator> | null>(null);
+  const trains3d = useRef<ReturnType<typeof createTrainsLayer> | null>(null);
   const [ready, setReady] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const { trains, updatedAt } = useTrains();
@@ -22,7 +22,8 @@ export function App() {
       container: container.current!,
       style: "https://tiles.openfreemap.org/styles/positron",
       center: LONDON,
-      zoom: 12.5,
+      zoom: 13.2,
+      minZoom: 9.5,
       pitch: 55,
       bearing: -15,
     });
@@ -33,18 +34,17 @@ export function App() {
       setLines(data);
       add3dBuildings(map);
       drawLines(map, data);
-      addTrainLayer(map);
-      animator.current = createTrainAnimator(map);
+      trains3d.current = createTrainsLayer();
+      map.addLayer(trains3d.current.layer);
       setReady(true);
     });
     return () => {
-      animator.current?.stop();
       map.remove();
     };
   }, []);
 
   useEffect(() => {
-    if (ready) animator.current?.update(trains);
+    if (ready) trains3d.current?.update(trains);
   }, [ready, trains]);
 
   return (
