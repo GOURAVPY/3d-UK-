@@ -23,7 +23,7 @@ TfL gives arrival predictions, not GPS, so we estimate. Every 30 s:
 1. Fetch `/Line/{id}/Arrivals` per line (19 requests, far under 500/min).
 2. Group predictions by `vehicleId`. Sort each group by `timeToStation`. The first is the next stop, the second says which way it is heading.
 3. Station behind the train = a neighbour of the next stop (from the line stop sequence) that is not the second stop. At a terminus the only neighbour is kept, because the train turns back.
-4. Track = the shortest slice of any line path that touches both stations (straight line if none).
+4. Track = the real track shape for that station link from `data/tracks.json` (built offline from OpenStreetMap), or a straight line if the link has none.
 5. Remaining distance = min(timeToStation x speed, track length).
 6. Position = point on the track that far behind the next stop. Speed is a per-mode guess (tube 11, DLR 9, Elizabeth 17, Overground 14 m/s).
 7. Do the same with `timeToStation - 30` for where the train will be one poll later.
@@ -33,3 +33,8 @@ Edge cases still open: dwell time at stations, trains with a far-off next stop s
 
 ## Live streams (extra)
 Third-party streams are a static list in `frontend/src/data/streams.ts`, not part of the TfL data flow. Entries link out, or embed in the page when a `youtubeId` is set. Street traffic cameras were removed.
+
+## Track data pipeline (offline, run once)
+1. `node scripts/fetch-osm.mjs` downloads London rail ways from Overpass to `data/raw/osm-rail.json` (git-ignored).
+2. `npx tsx scripts/build-tracks.ts` routes every TfL station link over that graph and writes `data/tracks.json`.
+3. The server reads `data/tracks.json` at startup. Re-run when TfL adds stations.
