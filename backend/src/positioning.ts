@@ -73,6 +73,16 @@ export class LineTracks {
     return best;
   }
 
+  neighbours(id: string): string[] {
+    return [...(this.near.get(id) ?? [])];
+  }
+
+  // Metres from the start of the track where a train is `secondsToNext` seconds from its next station.
+  alongAt(track: Track, secondsToNext: number): number {
+    const remaining = Math.min(Math.max(secondsToNext, 0) * this.speed, track.length);
+    return track.length - remaining;
+  }
+
   // Direction of travel (compass degrees) at that same spot.
   headingAt(track: Track, secondsToNext: number): number {
     const remaining = Math.min(Math.max(secondsToNext, 0) * this.speed, track.length);
