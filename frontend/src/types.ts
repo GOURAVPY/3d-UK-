@@ -24,6 +24,7 @@ export interface Train {
   lon: number;
   toLat: number; // where it will be one poll later
   toLon: number;
+  heading: number; // compass degrees, 0 = north
 }
 
 
