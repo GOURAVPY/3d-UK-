@@ -195,6 +195,16 @@ export function App() {
     flights3d.current?.select(selectedFlightId);
   }, [ready, selectedFlightId, styleVersion]);
 
+  // ?train=victoria:213 opens that train's panel as soon as it shows up in the feed.
+  const wantedTrain = useRef(new URLSearchParams(location.search).get("train"));
+  useEffect(() => {
+    const id = wantedTrain.current;
+    if (ready && id && trains.some((t) => t.id === id)) {
+      wantedTrain.current = null;
+      setSelectedId(id);
+    }
+  }, [ready, trains]);
+
   // The train left the feed: drop the selection.
   useEffect(() => {
     if (ready && selectedId && !selected) {
