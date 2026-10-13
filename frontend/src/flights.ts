@@ -117,6 +117,16 @@ export function createFlightsLayer() {
   let shadow: THREE.InstancedMesh;
   let selected: string | null = null;
   let frameGapMs = 0; // Eco Mode
+  // The last projection used to draw, so a click can be tested against where a plane
+  // really is on screen (at its altitude), not against the ground under it.
+  const lastProjection = new THREE.Matrix4();
+  const clip = new THREE.Vector4();
+  const toScreen = (x: number, y: number, z: number): [number, number] | null => {
+    clip.set(x, y, z, 1).applyMatrix4(lastProjection);
+    if (clip.w <= 0) return null; // behind the camera
+    const canvas = map.getCanvas();
+    return [((clip.x / clip.w + 1) / 2) * canvas.clientWidth, ((1 - clip.y / clip.w) / 2) * canvas.clientHeight];
+  };
   let night = false;
   let ambient: THREE.AmbientLight | undefined;
   let sunLight: THREE.DirectionalLight | undefined;
@@ -212,6 +222,7 @@ export function createFlightsLayer() {
       camera.projectionMatrix = new THREE.Matrix4()
         .fromArray(args.defaultProjectionData.mainMatrix as unknown as number[])
         .multiply(toWorld);
+      lastProjection.copy(camera.projectionMatrix);
 
       renderer.resetState();
       renderer.render(scene, camera);
@@ -267,10 +278,11 @@ export function createFlightsLayer() {
       let best: string | null = null;
       let bestD = PICK_PX + 2;
       for (const [id, p] of planes) {
+        if (now - p.recv > STALE_MS) continue;
         const at = place(p, now);
-        const [lon, lat] = fromLocal(at.x, at.y);
-        const sp = map.project([lon, lat]);
-        const d = Math.hypot(sp.x - x, sp.y - y);
+        const sp = toScreen(at.x, at.y, Math.max(at.z, 1.5));
+        if (!sp) continue;
+        const d = Math.hypot(sp[0] - x, sp[1] - y);
         if (d < bestD) {
           bestD = d;
           best = id;

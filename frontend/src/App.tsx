@@ -146,6 +146,9 @@ export function App() {
       flights3d.current = createFlightsLayer();
       flights3d.current.setNight(dark);
       map.addLayer(flights3d.current.layer);
+      if (import.meta.env.DEV) {
+        (window as unknown as { __layers: unknown }).__layers = { trains: trains3d.current, flights: flights3d.current };
+      }
       setStyleVersion((v) => v + 1);
       setReady(true);
     });
