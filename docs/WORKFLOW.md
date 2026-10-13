@@ -39,3 +39,9 @@ docs/      this folder
 2. If the Render URL is not `live-city-backend.onrender.com`, change it in `frontend/vercel.json`.
 3. **Frontend on Vercel:** import the repo, root directory `frontend`. Add env `VITE_BACKEND_URL=https://<service>.onrender.com`. Deploy.
 Render's free plan sleeps after 15 min idle, and history restarts empty after each sleep.
+
+### Free option: everything on Render, no Blueprint
+Blueprints can ask for a card. Two free services made by hand work instead:
+1. **New > Web Service**, repo `GOURAVPY/3d-UK-`, root directory `backend`, build `npm ci --include=dev`, start `npm start`, plan Free. Add env `TFL_APP_KEY`.
+2. **New > Static Site**, same repo, root directory `frontend`, build `npm ci && npm run build`, publish directory `dist`. Add env `VITE_BACKEND_URL` = the web service address (no trailing slash).
+The page calls the backend directly (CORS is open), so no rewrite rules are needed.
