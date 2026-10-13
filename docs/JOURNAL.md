@@ -491,3 +491,8 @@ The hit test projected the plane's latitude and longitude, i.e. the ground under
 - First cut was 99 s: a click on a non-existent "Follow" tooltip waited 30 s, and the page-loading time was kept. Fixed the selector, gave optional clicks a 3 s timeout, and cut the loading part with ffmpeg `-ss`. Playwright's ffmpeg only writes VP8, so the MP4 is made with the imageio-ffmpeg binary. The 25 MB WebM is git-ignored.
 - **Write-up:** `docs/HOW-IT-WORKS.md`, how arrival countdowns become a point on the track.
 - **Deploy config:** `render.yaml` (backend, `TFL_APP_KEY` set in the Render dashboard), `frontend/vercel.json` rewrites `/api` to Render, and the socket uses `VITE_BACKEND_URL` when set. Production build checked. Not deployed yet: needs the owner's Vercel and Render accounts.
+
+## 2026-10-13 — Backend live on Render
+- Service `live-city-backend`, free plan, Frankfurt, auto-deploys from `main`: https://live-city-backend.onrender.com/api/health
+- Created through the Render connector, which has no root-directory option, so the commands are `cd backend && npm ci --include=dev` and `cd backend && npm start`.
+- First boot without a TfL key: 19 lines, 320 trains, but the status poll got HTTP 429 and adsb.lol also returned 429. Next step: set `TFL_APP_KEY` in the Render dashboard.
