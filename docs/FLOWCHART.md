@@ -50,5 +50,5 @@ flowchart LR
     W2 --> W3[Week 3<br/>Positions + smooth move ✅]
     W3 --> W4[Week 4<br/>Train panel, follow, departures ✅]
     W4 --> W5[Week 5<br/>Day/night, alerts, replay, phone ✅]
-    W5 --> W6[Week 6<br/>Demo, write-up, launch]
+    W5 --> W6[Week 6<br/>Demo, write-up, launch 🟡]
 ```
