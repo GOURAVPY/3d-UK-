@@ -7,3 +7,7 @@ backend/data/raw/
 # recorded train history (large, rebuilt as the server runs)
 backend/data/history.jsonl
 backend/data/history-meta.json
+
+# build output and the big raw demo recording
+frontend/dist/
+docs/demo/*.webm
