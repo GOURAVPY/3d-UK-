@@ -33,3 +33,9 @@ docs/      this folder
 2. Build in small steps, commit often, push at the end of each session.
 3. Log problems and decisions in `JOURNAL.md`.
 4. Friday: fill in done / not done / lessons, set next week's goal.
+
+## Deploy
+1. **Backend on Render:** New > Blueprint, pick this repo (it reads `render.yaml`). Set `TFL_APP_KEY` in the dashboard. Check `https://<service>.onrender.com/api/health`.
+2. If the Render URL is not `live-city-backend.onrender.com`, change it in `frontend/vercel.json`.
+3. **Frontend on Vercel:** import the repo, root directory `frontend`. Add env `VITE_BACKEND_URL=https://<service>.onrender.com`. Deploy.
+Render's free plan sleeps after 15 min idle, and history restarts empty after each sleep.
