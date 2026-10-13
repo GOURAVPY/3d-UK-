@@ -9,12 +9,15 @@ interface Props {
 }
 
 // Top-right card: how many trains are running, with a live pulse and London time.
+const STALE_MS = 90_000; // two missed polls
+
 export function Hud({ trains, aircraft, now, updatedAt, playback }: Props) {
+  const stale = !playback && !!updatedAt && now.getTime() - updatedAt.getTime() > STALE_MS;
   return (
     <section className="hud" aria-live="polite">
       <div className="state">
-        <span className={`pulse${playback ? " amber" : ""}`} />
-        {playback ? "PLAYBACK" : "LIVE"}
+        <span className={`pulse${playback ? " amber" : stale ? " red" : ""}`} />
+        {playback ? "PLAYBACK" : stale ? "STALE" : "LIVE"}
         <span className="clock">London {londonClock(now)}</span>
       </div>
       <div className="figures">
@@ -27,7 +30,9 @@ export function Hud({ trains, aircraft, now, updatedAt, playback }: Props) {
           <span>aircraft</span>
         </div>
       </div>
-      {updatedAt && !playback && <small>updated {updatedAt.toLocaleTimeString("en-GB")}</small>}
+      {updatedAt && !playback && (
+        <small>{stale ? "no update since" : "updated"} {londonClock(updatedAt)}</small>
+      )}
     </section>
   );
 }

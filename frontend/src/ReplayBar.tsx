@@ -93,12 +93,17 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
       .catch(() => setInfo({ from: null, to: null, count: 0, stations: [], lines: [] }));
   }, []);
 
+  const pending = useRef<number | null>(null);
   const load = useCallback(async (from: number) => {
+    if (pending.current === from) return; // already on its way
+    pending.current = from;
     const to = from + WINDOW_MS;
     const res = await fetch(`/api/history?from=${Math.floor(from)}&to=${Math.floor(to)}`);
     snaps.current = (await res.json()) as Snapshot[];
     loaded.current = { from, to };
     lastShown.current = -1;
+    pending.current = null;
+    setVt((v) => v + 0.001); // re-run the frame effect now the window is here
   }, []);
 
   const decode = useCallback(

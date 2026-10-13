@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Line, Train } from "./types";
 import { add3dBuildings } from "./buildings";
@@ -65,6 +65,7 @@ export function App() {
   const [replay, setReplay] = useState(false);
   const [eco, setEco] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [replayCount, setReplayCount] = useState(0);
   const { trains, updatedAt } = useTrains();
   const flights = useFlights();
   const status = useStatus();
@@ -97,10 +98,15 @@ export function App() {
       bearing: -15,
     });
     mapRef.current = map;
+    if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = map; // for debugging in the console
+    let removed = false;
 
     // A new map style wipes our layers, so every style.load puts them back. style.load fires
     // as soon as the style is ready, long before every tile has arrived.
     map.on("style.load", async () => {
+      // map.remove() loads an empty style and fires this too; and two loads can overlap while
+      // the first is still fetching, so the second must not add everything twice
+      if (removed || map.getSource("lines")) return;
       if (!world.current) {
         const [data, shapes, lanes, levels, layout]: [
           Line[],
@@ -120,6 +126,7 @@ export function App() {
         world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes, levels), layout };
         setLines(data);
       }
+      if (removed || map.getSource("lines")) return;
       const { lines: data, index, layout } = world.current;
       const dark = nightRef.current;
       stopLines.current?.();
@@ -181,6 +188,7 @@ export function App() {
       map.getCanvas().style.cursor = over || near ? "pointer" : "";
     });
     return () => {
+      removed = true;
       map.remove();
     };
   }, []);
@@ -199,7 +207,7 @@ export function App() {
   }, [ready, status, styleVersion]);
 
   // The interface follows the map: light cards by day, dark glass at night.
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = night ? "night" : "day";
   }, [night]);
 
@@ -222,6 +230,7 @@ export function App() {
   const showReplayFrame = useCallback((list: Train[], glideMs: number) => {
     trains3d.current?.setGlideMs(glideMs);
     trains3d.current?.update(list);
+    setReplayCount(list.length);
   }, []);
 
   const toggleReplay = () => {
@@ -286,6 +295,14 @@ export function App() {
     }
   }, [ready, selectedId, selected]);
 
+  // The aircraft left the feed: drop the selection and the follow.
+  useEffect(() => {
+    if (ready && selectedFlightId && !selectedFlight) {
+      setSelectedFlightId(null);
+      setFollowing(false);
+    }
+  }, [ready, selectedFlightId, selectedFlight]);
+
   // Follow mode: the camera rides along with the train until the user drags the map.
   useEffect(() => {
     const map = mapRef.current;
@@ -340,7 +357,13 @@ export function App() {
   return (
     <>
       <div ref={container} className="map" />
-      <Hud trains={trains.length} aircraft={flights.length} now={now} updatedAt={updatedAt} playback={replay} />
+      <Hud
+        trains={replay ? replayCount : trains.length}
+        aircraft={replay ? 0 : flights.length}
+        now={now}
+        updatedAt={updatedAt}
+        playback={replay}
+      />
       <AlertsBar status={status} />
       <Toolbar
         mode={mode}

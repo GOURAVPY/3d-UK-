@@ -107,6 +107,9 @@ export function createTrainsLayer(index: TrackIndex) {
     mat.color.set(night ? 0x2a2418 : 0x16222e);
     mat.emissive.set(night ? 0xffcf70 : 0x000000);
     (ghostWindows.material as THREE.MeshBasicMaterial).color.set(night ? 0xffcf70 : 0x9fb4c8);
+    // a 34% ghost reads on a dark map but vanishes on the pale day map
+    (ghostBody.material as THREE.MeshBasicMaterial).opacity = night ? 0.34 : 0.62;
+    (ghostSkirt.material as THREE.MeshBasicMaterial).opacity = night ? 0.3 : 0.5;
   };
 
   const slide = (g: Glide, now: number) => {

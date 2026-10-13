@@ -7,6 +7,8 @@ import { METRE, ORIGIN, fromLocal, toLocal } from "./tracks";
 
 const MAX_PLANES = 1500;
 const CORRECT_MS = 2500; // how fast a new position pulls the drawn plane onto it
+const COAST_MS = 60_000; // keep moving a plane this long after its last report, then hold it
+const STALE_MS = 120_000; // and stop drawing it after this long
 const SCREEN_PX = 15; // length on screen when zoomed out
 
 // Length in metres by ICAO type code. Anything unknown is drawn as a narrow-body.
@@ -128,7 +130,7 @@ export function createFlightsLayer() {
 
   // Where a plane is drawn at time `now`: dead reckoning from its last report.
   const place = (p: Plane, now: number) => {
-    const dt = (now - p.recv) / 1000;
+    const dt = Math.min(now - p.recv, COAST_MS) / 1000;
     const fade = Math.exp(-(now - p.recv) / CORRECT_MS);
     return {
       x: p.x + p.vx * dt + p.errX * fade,
@@ -172,6 +174,7 @@ export function createFlightsLayer() {
       let n = 0;
       for (const [id, p] of planes) {
         if (n >= MAX_PLANES) break;
+        if (now - p.recv > STALE_MS) continue;
         const isSel = id === selected;
         // the selected aircraft is drawn bigger, so its shape is easy to see
         const size = isSel ? Math.max(p.length * 1.5, floor * 4) : Math.max(p.length, floor);

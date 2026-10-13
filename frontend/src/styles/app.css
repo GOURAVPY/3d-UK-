@@ -73,6 +73,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .hud .clock { margin-left: auto; font-weight: 500; letter-spacing: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
 .pulse.amber { background: var(--amber); animation: none; }
+.pulse.red { background: var(--red); animation: none; }
 .hud .figures { display: flex; gap: 18px; margin-top: 8px; }
 .hud .figures div { display: flex; flex-direction: column; }
 .hud .figures b { font-size: 26px; line-height: 1.05; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -278,7 +279,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   .hud .figures b { font-size: 22px; }
   .legend { min-width: 0; max-height: 34vh; }
   .legend:not(.open) { width: auto; }
-  .alerts { top: auto; bottom: 74px; left: 8px; transform: none; }
+  .alerts { top: 56px; left: 8px; transform: none; max-width: 180px; }
   .toolbar { top: calc(var(--gap) + 100px); padding: 4px; }
   .ibtn { width: 40px; min-height: 40px; }
   .ibtn::after { display: none; }

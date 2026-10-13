@@ -67,6 +67,7 @@ export function recordSnapshot(trains: Train[], t = Date.now()) {
       Math.round(tr.d0), Math.round(tr.d1), Math.round(tr.heading),
     ]);
   }
+  if (!rows.length) return;
   const text = JSON.stringify({ t, r: rows }) + "\n";
   const off = statSync(FILE).size;
   appendFileSync(FILE, text);

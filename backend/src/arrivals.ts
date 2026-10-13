@@ -58,6 +58,10 @@ export interface Stop {
   expectedArrival: string;
 }
 
+// Trains of each line from the last poll that reached TfL, so a line whose request fails
+// this time keeps its trains instead of blinking out for 30 s.
+const lastByLine = new Map<string, Train[]>();
+
 // Upcoming stops of every train from the last poll, keyed by train id.
 let stopsByTrain = new Map<string, Stop[]>();
 export function stopsFor(trainId: string): Stop[] | undefined {
@@ -75,11 +79,18 @@ export async function fetchTrains(
   const results = await Promise.allSettled(
     lines.map((l) => tfl<Prediction[]>(`/Line/${l.id}/Arrivals`)),
   );
+  if (results.every((r) => r.status === "rejected")) {
+    throw new Error(`TfL unreachable: ${(results[0] as PromiseRejectedResult).reason}`);
+  }
   const trains: Train[] = [];
   const stops = new Map<string, Stop[]>();
   results.forEach((r, i) => {
-    if (r.status !== "fulfilled") return;
     const line = lines[i];
+    if (r.status !== "fulfilled") {
+      trains.push(...(lastByLine.get(line.id) ?? []));
+      return;
+    }
+    const lineTrains: Train[] = [];
     const lt = tracks.get(line.id)!;
     const byVehicle = new Map<string, Prediction[]>();
     for (const p of r.value) {
@@ -136,7 +147,7 @@ export async function fetchTrains(
             expectedArrival: p.expectedArrival,
           })),
       );
-      trains.push({
+      lineTrains.push({
         id: `${line.id}:${vehicleId}`,
         lineId: line.id,
         lineName: line.name,
@@ -159,6 +170,8 @@ export async function fetchTrains(
         d1,
       });
     }
+    lastByLine.set(line.id, lineTrains);
+    trains.push(...lineTrains);
   });
   queueWaitingTrains(trains);
   stopsByTrain = stops;
