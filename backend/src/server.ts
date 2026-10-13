@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { departuresFor } from "./departures.js";
 import { historyInfo, initHistory, readHistory, recordSnapshot } from "./history.js";
 import { fetchFlights, type Flight } from "./flights.js";
+import { stationPhoto, trainPhoto } from "./photos.js";
 import { stationDetails } from "./stationDetails.js";
 import { fetchStatus, type LineStatus } from "./status.js";
 import { applyTracks, loadAllLines, loadTrackFile, type Line } from "./lines.js";
@@ -64,6 +65,23 @@ app.get("/api/tracks", (_req, res) => res.json(trackShapes));
 app.get("/api/lanes", (_req, res) => res.json(lanes));
 app.get("/api/levels", (_req, res) => res.json(levels));
 app.get("/api/layout", (_req, res) => res.json(layout));
+// Real photos from Wikipedia: the train type a line runs, and the station itself.
+app.get("/api/lines/:id/photo", async (req, res) => {
+  try {
+    res.json(await trainPhoto(req.params.id));
+  } catch {
+    res.status(502).json({ error: "Wikipedia unavailable" });
+  }
+});
+app.get("/api/stations/:id/photo", async (req, res) => {
+  const name = lines.flatMap((l) => l.stations).find((s) => s.id === req.params.id)?.name;
+  if (!name) return res.status(404).json({ error: "unknown station" });
+  try {
+    res.json(await stationPhoto(req.params.id, name));
+  } catch {
+    res.status(502).json({ error: "Wikipedia unavailable" });
+  }
+});
 app.get("/api/stations/:id/details", async (req, res) => {
   const id = req.params.id;
   if (!/^[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ error: "bad station id" });
