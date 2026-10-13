@@ -8,3 +8,4 @@
 | [WORKFLOW.md](WORKFLOW.md) | How we work: commit rule, running the project, secrets. |
 | [FLOWCHART.md](FLOWCHART.md) | Diagrams: system flow, position estimate, weekly cycle, 6-week plan. |
 | [DATA-SOURCES.md](DATA-SOURCES.md) | Every API we use: what it gives, how much, how often. |
+| [HOW-IT-WORKS.md](HOW-IT-WORKS.md) | Write-up for readers: how arrival times become train positions. Demo video in `demo/`. |
