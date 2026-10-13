@@ -57,5 +57,10 @@ Fill in each Friday. Status: ⬜ not started · 🟨 in progress · ✅ done
 **Not done / limits:** replay is as long as the server has been running; not tried on a real phone; no DLR trains.
 **Next week:** Week 6 below.
 
-## Week 6 — Demo, write-up, launch ⬜
+## Week 6 — Demo, write-up, launch 🟡 (2026-10-13)
 **Goal:** 30 s demo video, write-up on how arrival times become positions, publish. Second city after launch.
+**Done:**
+- Demo video, 61 s: rush hour at 60x, follow a train, aircraft at Heathrow (`docs/demo/demo.mp4`, re-recordable by script).
+- Write-up: `docs/HOW-IT-WORKS.md`.
+- Deploy config for Vercel (frontend) and Render (backend).
+**Not done:** the actual launch needs the owner's Vercel and Render accounts; second city.
