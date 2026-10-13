@@ -1,4 +1,5 @@
 import { apiFetch } from "./socket";
+import { Photo } from "./ui/Photo";
 import { useEffect, useState } from "react";
 import type { Departure } from "./types";
 import { minutes, shortName } from "./format";
@@ -112,6 +113,8 @@ export function StationPanel({ stationId, name, onClose }: Props) {
         {shortName(details?.name ?? name)}
         {details?.zone && <span className="zone">Zone {details.zone}</span>}
       </h3>
+
+      {showInfo && <Photo src={`/api/stations/${stationId}/photo`} />}
 
       {details && (
         <div className="info">
