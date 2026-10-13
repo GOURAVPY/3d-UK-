@@ -7,17 +7,30 @@ const AIRPORTS = [
   { code: "LCY", name: "London City", lon: 0.0553, lat: 51.5053 },
 ];
 
+// Map layers the viewer can switch off, in the order they are listed.
+export const LAYER_NAMES = ["trains", "aircraft", "lines", "stations", "buildings"] as const;
+export type LayerName = (typeof LAYER_NAMES)[number];
+export type Shown = Record<LayerName, boolean>;
+const LAYER_LABELS: Record<LayerName, string> = {
+  trains: "Trains",
+  aircraft: "Aircraft",
+  lines: "Lines and tunnels",
+  stations: "Stations",
+  buildings: "3D buildings",
+};
+
 interface BtnProps {
-  icon: IconName;
+  icon?: IconName;
   tip: string;
   on?: boolean;
   badge?: string;
   label?: string;
   onClick: () => void;
+  children?: React.ReactNode;
 }
 
 // One icon button. The tooltip is also the accessible name.
-function Btn({ icon, tip, on, badge, label, onClick }: BtnProps) {
+function Btn({ icon, tip, on, badge, label, onClick, children }: BtnProps) {
   return (
     <button
       className={`ibtn${on ? " on" : ""}`}
@@ -26,10 +39,22 @@ function Btn({ icon, tip, on, badge, label, onClick }: BtnProps) {
       aria-pressed={on === undefined ? undefined : on}
       onClick={onClick}
     >
-      <Icon name={icon} />
+      {icon && <Icon name={icon} />}
+      {children}
       {label && <span className="lbl">{label}</span>}
       {badge && <span className="badge">{badge}</span>}
     </button>
+  );
+}
+
+// A compass whose needle turns with the map. Red end points north.
+function Compass({ bearing }: { bearing: number }) {
+  return (
+    <svg className="needle" width="22" height="22" viewBox="0 0 24 24" style={{ transform: `rotate(${-bearing}deg)` }} aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.6" opacity="0.6" />
+      <path d="M12 3 15 12 9 12z" fill="#ff453a" />
+      <path d="M12 21 15 12 9 12z" fill="currentColor" opacity="0.45" />
+    </svg>
   );
 }
 
@@ -45,15 +70,22 @@ interface Props {
   onToggleUnderground: () => void;
   replay: boolean;
   onToggleReplay: () => void;
+  bearing: number;
+  onResetNorth: () => void;
+  shown: Shown;
+  onToggleLayer: (name: LayerName) => void;
   onFlyTo: (lon: number, lat: number) => void;
 }
 
-// The control strip down the right edge: display modes, then jump-to places and live streams.
+// The control strip down the right edge: display modes, compass and layers, then
+// jump-to places and live streams.
 export function Toolbar(p: Props) {
-  const [streams, setStreams] = useState(false);
+  const [open, setOpen] = useState<"streams" | "layers" | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const playingStream = STREAMS.find((s) => s.id === playing);
   const modeName = p.mode === "auto" ? "Automatic" : p.mode === "day" ? "Day" : "Night";
+  const toggle = (which: "streams" | "layers") => setOpen((o) => (o === which ? null : which));
+  const facing = Math.round(((p.bearing % 360) + 360) % 360);
 
   return (
     <nav className="toolbar" aria-label="Map controls">
@@ -70,6 +102,13 @@ export function Toolbar(p: Props) {
           tip={p.fullscreen ? "Leave full screen (Esc)" : "Full screen"}
           onClick={p.onToggleFullscreen}
         />
+      </div>
+
+      <div className="group">
+        <Btn tip={facing === 0 ? "Facing north" : `Facing ${facing}°. Click to turn north`} onClick={p.onResetNorth}>
+          <Compass bearing={p.bearing} />
+        </Btn>
+        <Btn icon="layers" tip="Layers: choose what is shown" on={open === "layers"} onClick={() => toggle("layers")} />
       </div>
 
       <div className="group">
@@ -97,10 +136,22 @@ export function Toolbar(p: Props) {
             onClick={() => p.onFlyTo(a.lon, a.lat)}
           />
         ))}
-        <Btn icon="video" tip="Live streams" on={streams} onClick={() => setStreams((s) => !s)} />
+        <Btn icon="video" tip="Live streams" on={open === "streams"} onClick={() => toggle("streams")} />
       </div>
 
-      {streams && (
+      {open === "layers" && (
+        <div className="popover" role="dialog" aria-label="Layers">
+          <h4>Layers</h4>
+          {LAYER_NAMES.map((name) => (
+            <label key={name} className="check-row">
+              <input type="checkbox" checked={p.shown[name]} onChange={() => p.onToggleLayer(name)} />
+              <span>{LAYER_LABELS[name]}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {open === "streams" && (
         <div className="popover" role="dialog" aria-label="Live streams">
           <h4>Live streams</h4>
           {STREAMS.map((s) =>

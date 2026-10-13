@@ -10,7 +10,7 @@ import { ReplayBar } from "./ReplayBar";
 import { StationPanel } from "./StationPanel";
 import { Hud } from "./ui/Hud";
 import { Legend } from "./ui/Legend";
-import { Toolbar } from "./ui/Toolbar";
+import { Toolbar, type LayerName, type Shown } from "./ui/Toolbar";
 import { TrainPanel } from "./TrainPanel";
 import { MAX_PIXEL_RATIO } from "./device";
 import { STYLE_DAY, STYLE_NIGHT, isNight, type ThemeMode } from "./daynight";
@@ -66,6 +66,8 @@ export function App() {
   const [eco, setEco] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [replayCount, setReplayCount] = useState(0);
+  const [bearing, setBearing] = useState(-15);
+  const [shown, setShown] = useState<Shown>({ trains: true, aircraft: true, lines: true, stations: true, buildings: true });
   const { trains, updatedAt } = useTrains();
   const flights = useFlights();
   const status = useStatus();
@@ -98,6 +100,7 @@ export function App() {
       bearing: -15,
     });
     mapRef.current = map;
+    map.on("rotate", () => setBearing(map.getBearing()));
     if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = map; // for debugging in the console
     let removed = false;
 
@@ -218,6 +221,24 @@ export function App() {
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = night ? "night" : "day";
   }, [night]);
+
+  // Layers the viewer switched off. Custom 3D layers take visibility like any other.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    const groups: Record<LayerName, string[]> = {
+      trains: ["trains-3d"],
+      aircraft: ["flights-3d"],
+      lines: ["lines", "lines-glow", "lines-tunnel", "lines-bridge-casing", "lines-alert"],
+      stations: ["stations"],
+      buildings: ["buildings-3d"],
+    };
+    for (const [name, ids] of Object.entries(groups) as [LayerName, string[]][]) {
+      for (const id of ids) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", shown[name] ? "visible" : "none");
+      }
+    }
+  }, [ready, shown, styleVersion]);
 
   // Underground Mode: the city fades, the layout and tunnels come forward.
   useEffect(() => {
@@ -385,6 +406,10 @@ export function App() {
         replay={replay}
         onToggleReplay={toggleReplay}
         onCycleMode={() => setMode((m) => (m === "auto" ? "day" : m === "day" ? "night" : "auto"))}
+        bearing={bearing}
+        onResetNorth={() => mapRef.current?.easeTo({ bearing: 0, duration: 700 })}
+        shown={shown}
+        onToggleLayer={(name) => setShown((s) => ({ ...s, [name]: !s[name] }))}
         onFlyTo={(lon, lat) => mapRef.current?.flyTo({ center: [lon, lat], zoom: 13.5, pitch: 55 })}
       />
       {selected && (

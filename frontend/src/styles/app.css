@@ -122,6 +122,13 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   text-decoration: none; font-size: 13px;
 }
 .link-row:hover { background: var(--card-hover); }
+.check-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 13px; background: var(--faint);
+}
+.check-row:hover { background: var(--card-hover); }
+.check-row input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.ibtn .needle { transition: transform 0.25s var(--ease); }
 
 /* ------------------------------------------------------------------ legend -- */
 .legend {
