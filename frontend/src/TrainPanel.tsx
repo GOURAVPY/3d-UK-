@@ -1,3 +1,4 @@
+import { apiFetch } from "./socket";
 import { useEffect, useState } from "react";
 import type { Train } from "./types";
 import { minutes, shortName } from "./format";
@@ -28,7 +29,7 @@ function useStops(trainId: string) {
     setStops(null);
     const load = async () => {
       try {
-        const res = await fetch(`/api/trains/${encodeURIComponent(trainId)}/stops`);
+        const res = await apiFetch(`/api/trains/${encodeURIComponent(trainId)}/stops`);
         if (res.ok && alive) setStops(await res.json());
       } catch {
         /* keep the last list */

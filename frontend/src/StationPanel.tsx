@@ -1,3 +1,4 @@
+import { apiFetch } from "./socket";
 import { useEffect, useState } from "react";
 import type { Departure } from "./types";
 import { minutes, shortName } from "./format";
@@ -52,7 +53,7 @@ function useJson<T>(url: string): T | null {
   useEffect(() => {
     let alive = true;
     setData(null);
-    fetch(url)
+    apiFetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => alive && setData(j))
       .catch(() => undefined);
@@ -77,7 +78,7 @@ export function StationPanel({ stationId, name, onClose }: Props) {
     setFailed(false);
     const load = async () => {
       try {
-        const res = await fetch(`/api/stations/${stationId}/arrivals`);
+        const res = await apiFetch(`/api/stations/${stationId}/arrivals`);
         if (!res.ok) throw new Error(String(res.status));
         const data: Departure[] = await res.json();
         if (alive) {

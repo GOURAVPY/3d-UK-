@@ -1,3 +1,4 @@
+import { apiFetch } from "./socket";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Line, Train } from "./types";
 import { Icon } from "./ui/Icon";
@@ -84,7 +85,7 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
   }, [lines]);
 
   useEffect(() => {
-    fetch("/api/history/info")
+    apiFetch("/api/history/info")
       .then((r) => r.json())
       .then((i: Info) => {
         setInfo(i);
@@ -98,7 +99,7 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
     if (pending.current === from) return; // already on its way
     pending.current = from;
     const to = from + WINDOW_MS;
-    const res = await fetch(`/api/history?from=${Math.floor(from)}&to=${Math.floor(to)}`);
+    const res = await apiFetch(`/api/history?from=${Math.floor(from)}&to=${Math.floor(to)}`);
     snaps.current = (await res.json()) as Snapshot[];
     loaded.current = { from, to };
     lastShown.current = -1;
