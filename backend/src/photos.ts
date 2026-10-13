@@ -53,3 +53,39 @@ export async function trainPhoto(lineId: string): Promise<Photo | null> {
   cache.set(key, photo);
   return photo;
 }
+
+// "Warren Street Underground Station" -> "Warren Street"
+const baseName = (name: string) =>
+  name
+    .replace(/-Underground$/i, "") // "Paddington (H&C Line)-Underground"
+    .replace(/\s+(Underground|DLR|Rail|Overground)?\s*Station$/i, "")
+    .replace(/\s*\(.*\)$/, "")
+    .replace(/\bSt\. /g, "St ") // Wikipedia writes "St James's Park"
+    .trim();
+
+interface SearchPage { title: string; index: number; thumbnail?: { source: string } }
+
+/** Searches Wikipedia for the station's own article and returns its photo. */
+export async function stationPhoto(id: string, name: string): Promise<Photo | null> {
+  const key = `station:${id}`;
+  if (cache.has(key)) return cache.get(key)!;
+  const base = baseName(name);
+  const params = new URLSearchParams({
+    action: "query", format: "json", generator: "search", gsrlimit: "8",
+    gsrsearch: `${base} intitle:station London`, prop: "pageimages", piprop: "thumbnail", pithumbsize: "480",
+  });
+  const r = await get<{ query?: { pages: Record<string, SearchPage> } }>(`${WIKI}/w/api.php?${params}`);
+  const pages = Object.values(r.query?.pages ?? {}).filter((p) => p.thumbnail).sort((a, b) => a.index - b.index);
+  const lower = base.toLowerCase();
+  // best: an exact "<name> station" style title; next: the top result whose title starts with the name
+  // the kind TfL names ("... DLR Station") decides which same-named article wins
+  const kinds = /\bDLR\b/i.test(name) ? ["dlr station"] : /Underground/i.test(name) ? ["tube station"] : [];
+  const exact = [...kinds, "station", "tube station", "railway station", "dlr station"].map((s) => `${lower} ${s}`);
+  const pick =
+    exact.map((t) => pages.find((p) => p.title.toLowerCase() === t)).find(Boolean) ??
+    pages.find((p) => p.title.toLowerCase().startsWith(lower) && /station/i.test(p.title)) ??
+    pages.find((p) => p.title.toLowerCase().includes(lower) && /stations\b/i.test(p.title)); // "Bank and Monument stations"
+  const photo = pick ? { image: pick.thumbnail!.source, title: pick.title, page: pageUrl(pick.title) } : null;
+  cache.set(key, photo);
+  return photo;
+}
