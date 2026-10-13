@@ -480,3 +480,8 @@ Also: the page now retries its first data load every 3 s instead of staying empt
 
 ### Reported: cannot click an aircraft (screenshot)
 The hit test projected the plane's latitude and longitude, i.e. the ground under it. On a tilted map a plane at 11 km is drawn far from that point (280 px higher on screen in the test), so the click and the pointer cursor landed on empty map. `flights.ts` now keeps the last projection matrix and projects the drawn 3D position (x, y, altitude) to the screen. Checked by scanning the screen: 43 planes clickable, each at the spot where it is drawn. The same problem explains why planes were hard to click while testing earlier.
+
+## 2026-10-13 — Compass and Layers panel
+- **Compass** in the toolbar: an SVG needle rotated by minus the map bearing (red end north), updated from the map's `rotate` event. Clicking it eases the map to bearing 0 over 0.7 s. Checked: bearing -15 to 0.
+- **Layers** button opens a panel with five switches: trains, aircraft, lines and tunnels, stations, 3D buildings. Each sets `visibility` on the matching map layers (MapLibre accepts it on custom 3D layers too). The effect re-runs after a style change so the choice survives a theme switch. Checked: aircraft layer went to `none` and back.
+- The live-streams and layers popovers share one open-state so only one shows at a time.
