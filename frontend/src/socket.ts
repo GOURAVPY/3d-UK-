@@ -5,6 +5,9 @@ import { io, type Socket } from "socket.io-client";
 let shared: Socket | null = null;
 
 export function socket(): Socket {
-  shared ??= io();
+  // In production the page (Vercel) and the backend (Render) live on different hosts.
+  // HTTP calls go through a Vercel rewrite; the WebSocket connects to the backend directly.
+  const url = import.meta.env.VITE_BACKEND_URL as string | undefined;
+  shared ??= url ? io(url) : io();
   return shared;
 }
