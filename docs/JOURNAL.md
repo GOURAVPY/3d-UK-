@@ -485,3 +485,9 @@ The hit test projected the plane's latitude and longitude, i.e. the ground under
 - **Compass** in the toolbar: an SVG needle rotated by minus the map bearing (red end north), updated from the map's `rotate` event. Clicking it eases the map to bearing 0 over 0.7 s. Checked: bearing -15 to 0.
 - **Layers** button opens a panel with five switches: trains, aircraft, lines and tunnels, stations, 3D buildings. Each sets `visibility` on the matching map layers (MapLibre accepts it on custom 3D layers too). The effect re-runs after a style change so the choice survives a theme switch. Checked: aircraft layer went to `none` and back.
 - The live-streams and layers popovers share one open-state so only one shows at a time.
+
+## 2026-10-13 — Week 6: demo video, write-up, deploy config
+- **Demo video** (`docs/demo/demo.mp4`, 61 s, 1280x720): `frontend/scripts/record-demo.mjs` drives Chrome with Playwright. Scenes: live map, this morning at 60x while the camera turns, click a train and follow it, fly to Heathrow. Run with both servers up: `cd frontend && node scripts/record-demo.mjs`.
+- First cut was 99 s: a click on a non-existent "Follow" tooltip waited 30 s, and the page-loading time was kept. Fixed the selector, gave optional clicks a 3 s timeout, and cut the loading part with ffmpeg `-ss`. Playwright's ffmpeg only writes VP8, so the MP4 is made with the imageio-ffmpeg binary. The 25 MB WebM is git-ignored.
+- **Write-up:** `docs/HOW-IT-WORKS.md`, how arrival countdowns become a point on the track.
+- **Deploy config:** `render.yaml` (backend, `TFL_APP_KEY` set in the Render dashboard), `frontend/vercel.json` rewrites `/api` to Render, and the socket uses `VITE_BACKEND_URL` when set. Production build checked. Not deployed yet: needs the owner's Vercel and Render accounts.
