@@ -477,3 +477,6 @@ Two things in one picture:
 2. **A grey Jubilee train floating in the air** beside the tower. It was on the ground behind the tower, but every train was drawn with the depth buffer cleared (so tunnels would not be cut by buildings), so the tower could not hide it. Trains above ground are now depth-tested against the buildings; only below-ground trains keep the cleared depth.
 
 Also: the page now retries its first data load every 3 s instead of staying empty when the server is not up yet.
+
+### Reported: cannot click an aircraft (screenshot)
+The hit test projected the plane's latitude and longitude, i.e. the ground under it. On a tilted map a plane at 11 km is drawn far from that point (280 px higher on screen in the test), so the click and the pointer cursor landed on empty map. `flights.ts` now keeps the last projection matrix and projects the drawn 3D position (x, y, altitude) to the screen. Checked by scanning the screen: 43 planes clickable, each at the spot where it is drawn. The same problem explains why planes were hard to click while testing earlier.
