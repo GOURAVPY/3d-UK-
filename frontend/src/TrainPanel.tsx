@@ -1,4 +1,5 @@
 import { apiFetch } from "./socket";
+import { Photo } from "./ui/Photo";
 import { useEffect, useState } from "react";
 import type { Train } from "./types";
 import { minutes, shortName } from "./format";
@@ -68,6 +69,8 @@ export function TrainPanel({ train, following, onFollow, onClose }: Props) {
           <Icon name="x" size={18} />
         </button>
       </div>
+
+      {open && <Photo src={`/api/lines/${train.lineId}/photo`} />}
 
       {open && (
         <ol className="stops">
