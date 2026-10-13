@@ -470,3 +470,10 @@ Also added a dev-only `window.__map` so the live map can be inspected from the c
 ### Still open
 - Base map tiles from OpenFreeMap can take 10 s or more to arrive; our layers show first.
 - The dark style's own labels are small and grey.
+
+### Reported: "train duplicate issue" at Stratford (screenshot)
+Two things in one picture:
+1. **Three Mildmay trains nose-to-tail** behind Stratford. TfL reported three different trips as "Stratford in 3 s" at the same moment (a stale terminus prediction, departures 3, 4.5 and 9.5 minutes apart). The queue stand-in from Week 5 lined them up along the track, which read as duplicates. Now only the soonest departure from a station is shown; the others appear when they are next. 0 trains are queued after the change.
+2. **A grey Jubilee train floating in the air** beside the tower. It was on the ground behind the tower, but every train was drawn with the depth buffer cleared (so tunnels would not be cut by buildings), so the tower could not hide it. Trains above ground are now depth-tested against the buildings; only below-ground trains keep the cleared depth.
+
+Also: the page now retries its first data load every 3 s instead of staying empty when the server is not up yet.
