@@ -447,3 +447,26 @@ The interface had grown one patch at a time: stacked text buttons with emoji, a 
 
 ### Known limits
 - Checked in the desktop window at night and by day and earlier in the phone emulator; the phone layout (toolbar, collapsed legend, bottom sheets) was updated but not re-checked on a real phone.
+
+## 2026-10-13 — Bug hunt
+
+Read the main files, then exercised the app in the browser (day, night, station panel, Underground Mode, phone size). Both servers had stopped overnight; the log showed the first bug.
+
+| # | Bug | Where | Fix |
+|---|---|---|---|
+| 1 | Network outage made the server publish **0 trains** (map emptied) and record an empty snapshot into history | `arrivals.ts`, `server.ts` | If every line's request fails the poll throws and the last good trains stay; a line that fails alone keeps its previous trains; empty snapshots are skipped |
+| 2 | During an outage **aircraft flew off the map in straight lines** (dead reckoning had no limit) | `flights.ts` | Coast for at most 60 s, hide a plane unseen for 2 min |
+| 3 | Playback fired **one history fetch per animation frame** while the first was still loading | `ReplayBar.tsx` | Pending guard per window |
+| 4 | **`?underground` did not apply on load** (button lit, map normal): `style.load` ran twice on a fresh page and the second run broke the first; a removed map also fired it and crashed Three.js | `App.tsx` | Handler returns if the map was removed or already has our layers |
+| 5 | Following an aircraft that left the feed left the camera stuck with its centre elevated | `App.tsx` | Same release as for trains |
+| 6 | HUD showed the **live** train count during playback, and the update stamp in the viewer's local time next to London time | `Hud.tsx`, `App.tsx` | Replayed count; London time; red STALE state after 90 s without data |
+| 7 | Underground ghost trains almost invisible on the pale day map | `trains.ts` | Ghost opacity 0.62 by day, 0.34 at night |
+| 8 | Three WebSockets per browser (one per hook) | `socket.ts` | One shared socket |
+| 9 | Alert pill sat on top of the bottom-sheet panel on phones | `app.css` | Pill under the collapsed legend |
+| 10 | Dark cards flashed for a frame on a day load | `App.tsx` | `useLayoutEffect` for the theme attribute |
+
+Also added a dev-only `window.__map` so the live map can be inspected from the console.
+
+### Still open
+- Base map tiles from OpenFreeMap can take 10 s or more to arrive; our layers show first.
+- The dark style's own labels are small and grey.
