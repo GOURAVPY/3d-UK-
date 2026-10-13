@@ -1,5 +1,7 @@
+import { apiFetch } from "./socket";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import maplibreWorker from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import type { Line, Train } from "./types";
 import { add3dBuildings } from "./buildings";
 import { AlertsBar } from "./AlertsBar";
@@ -20,6 +22,9 @@ import { createTrainsLayer } from "./trains";
 import { useFlights } from "./useFlights";
 import { useStatus } from "./useStatus";
 import { useTrains } from "./useTrains";
+
+// The bundler doesn't copy MapLibre's worker next to our code, so say where it ended up.
+maplibregl.setWorkerUrl(maplibreWorker);
 
 const LONDON: [number, number] = [-0.1276, 51.5072];
 const FOLLOW_ZOOM = 16;
@@ -113,7 +118,7 @@ export function App() {
       if (!world.current) {
         // The server may still be starting: keep asking every few seconds until it answers.
         const json = async (path: string) => {
-          const r = await fetch(path);
+          const r = await apiFetch(path);
           if (!r.ok) throw new Error(`${path} ${r.status}`);
           return r.json();
         };
