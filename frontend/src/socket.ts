@@ -4,10 +4,13 @@ import { io, type Socket } from "socket.io-client";
 // to open a connection each, which tripled the server's connections for nothing.
 let shared: Socket | null = null;
 
+// Backend address in production (e.g. a Render web service); empty in dev, where Vite proxies /api.
+const BACKEND = ((import.meta.env.VITE_BACKEND_URL as string | undefined) ?? "").replace(/\/$/, "");
+
+/** fetch() for our own /api paths, sent to the backend wherever it is hosted. */
+export const apiFetch = (path: string, init?: RequestInit) => fetch(BACKEND + path, init);
+
 export function socket(): Socket {
-  // In production the page (Vercel) and the backend (Render) live on different hosts.
-  // HTTP calls go through a Vercel rewrite; the WebSocket connects to the backend directly.
-  const url = import.meta.env.VITE_BACKEND_URL as string | undefined;
-  shared ??= url ? io(url) : io();
+  shared ??= BACKEND ? io(BACKEND) : io();
   return shared;
 }
