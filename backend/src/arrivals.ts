@@ -178,12 +178,9 @@ export async function fetchTrains(
   return trains;
 }
 
-// Trains whose next arrival is far off are placed at the station they just left, so several
-// can end up on exactly the same spot. Line them up behind the platform instead, soonest
-// departure at the front, one train length apart.
-const QUEUE_GAP_M = 105;
-const MAX_QUEUED = 6;
-
+// Several trains can be waiting at one station (a terminus has them in platforms and
+// sidings, which we cannot see). Lining them up behind the platform looked like duplicates,
+// so only the one leaving soonest is shown; the others appear when they are next.
 function queueWaitingTrains(trains: Train[]): void {
   const waiting = new Map<string, Train[]>();
   for (const t of trains) {
@@ -192,12 +189,10 @@ function queueWaitingTrains(trains: Train[]): void {
     if (!waiting.has(key)) waiting.set(key, []);
     waiting.get(key)!.push(t);
   }
+  const hidden = new Set<Train>();
   for (const group of waiting.values()) {
     group.sort((x, y) => x.secondsToNext - y.secondsToNext);
-    group.forEach((t, k) => {
-      const back = (k % MAX_QUEUED) * QUEUE_GAP_M;
-      t.d0 -= back;
-      t.d1 -= back;
-    });
+    for (const t of group.slice(1)) hidden.add(t);
   }
+  if (hidden.size) trains.splice(0, trains.length, ...trains.filter((t) => !hidden.has(t)));
 }

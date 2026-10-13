@@ -108,19 +108,24 @@ export function App() {
       // the first is still fetching, so the second must not add everything twice
       if (removed || map.getSource("lines")) return;
       if (!world.current) {
-        const [data, shapes, lanes, levels, layout]: [
-          Line[],
-          Record<string, [number, number][]>,
-          Record<string, number>,
-          Record<string, [number, number][]>,
-          { type: "FeatureCollection"; features: unknown[] },
-        ] = await Promise.all([
-          fetch("/api/lines").then((r) => r.json()),
-          fetch("/api/tracks").then((r) => r.json()),
-          fetch("/api/lanes").then((r) => r.json()),
-          fetch("/api/levels").then((r) => r.json()),
-          fetch("/api/layout").then((r) => r.json()),
-        ]);
+        // The server may still be starting: keep asking every few seconds until it answers.
+        const json = async (path: string) => {
+          const r = await fetch(path);
+          if (!r.ok) throw new Error(`${path} ${r.status}`);
+          return r.json();
+        };
+        let loaded: [Line[], Record<string, [number, number][]>, Record<string, number>, Record<string, [number, number][]>, { type: "FeatureCollection"; features: unknown[] }] | null = null;
+        while (!loaded && !removed) {
+          try {
+            loaded = await Promise.all([
+              json("/api/lines"), json("/api/tracks"), json("/api/lanes"), json("/api/levels"), json("/api/layout"),
+            ]);
+          } catch {
+            await new Promise((r) => setTimeout(r, 3000));
+          }
+        }
+        if (!loaded) return;
+        const [data, shapes, lanes, levels, layout] = loaded;
         const stations = new globalThis.Map<string, [number, number]>();
         for (const l of data) for (const s of l.stations) stations.set(s.id, [s.lon, s.lat]);
         world.current = { lines: data, index: new TrackIndex(stations, shapes, lanes, levels), layout };

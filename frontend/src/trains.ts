@@ -280,9 +280,21 @@ export function createTrainsLayer(index: TrackIndex) {
         .fromArray(args.defaultProjectionData.mainMatrix as unknown as number[])
         .multiply(toWorld);
 
+      // Two passes. Trains above ground are depth-tested against the buildings, so one behind
+      // a tower is hidden by it instead of appearing to float in front. Trains below ground
+      // would be cut by every building, so for them the depth buffer is cleared first.
+      const solid = [body, windows, skirt, lights];
+      const ghostly = [ghostBody, ghostWindows, ghostSkirt];
+      const above = undergroundMode ? ghostly : solid;
+      const below = undergroundMode ? solid : ghostly;
       renderer.resetState();
-      renderer.clearDepth(); // trains run underground, so never let buildings cut through them
+      for (const m of below) m.visible = false;
       renderer.render(scene, camera);
+      for (const m of below) m.visible = true;
+      for (const m of above) m.visible = false;
+      renderer.clearDepth();
+      renderer.render(scene, camera);
+      for (const m of above) m.visible = true;
       // keep animating: every frame normally, a few times a second in Eco Mode
       if (frameGapMs) setTimeout(() => map.triggerRepaint(), frameGapMs);
       else map.triggerRepaint();
