@@ -496,3 +496,9 @@ The hit test projected the plane's latitude and longitude, i.e. the ground under
 - Service `live-city-backend`, free plan, Frankfurt, auto-deploys from `main`: https://live-city-backend.onrender.com/api/health
 - Created through the Render connector, which has no root-directory option, so the commands are `cd backend && npm ci --include=dev` and `cd backend && npm start`.
 - First boot without a TfL key: 19 lines, 320 trains, but the status poll got HTTP 429 and adsb.lol also returned 429. Next step: set `TFL_APP_KEY` in the Render dashboard.
+
+## 2026-10-13 — Real train and station photos
+- **Trains:** each line maps to the Wikipedia article for the train it runs (Northern: 1995 Stock, Elizabeth: Class 345, Overground: Class 710/378, DLR: B07). The photo is that article's lead image.
+- **Stations:** Wikipedia search for `<name> intitle:station London`. An exact title wins (`... DLR station` first for DLR names, `... tube station` for Underground), then the top title starting with the name, then a shared article like "Bank and Monument stations". Names are cleaned first ("St." to "St", "-Underground" dropped).
+- Checked 191 stations before Wikipedia rate-limited the bulk test: 187 right, 4 misses (all fixed after), 0 wrong. Normal use is one request per click and results are cached, so the limit isn't a problem.
+- Backend `photos.ts`, endpoints `/api/lines/:id/photo` and `/api/stations/:id/photo`. Frontend `ui/Photo.tsx` with a "Wikipedia" credit link. Images stay on Wikimedia's servers.
