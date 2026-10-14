@@ -1,0 +1,17 @@
+{
+  "name": "live-city-3d",
+  "private": true,
+  "description": "Every train in London, live, in 3D",
+  "scripts": {
+    "setup": "npm install && npm ci --prefix backend && npm ci --prefix frontend",
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "^3.6.2"
+  }
+}
