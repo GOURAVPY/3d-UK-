@@ -502,3 +502,9 @@ The hit test projected the plane's latitude and longitude, i.e. the ground under
 - **Stations:** Wikipedia search for `<name> intitle:station London`. An exact title wins (`... DLR station` first for DLR names, `... tube station` for Underground), then the top title starting with the name, then a shared article like "Bank and Monument stations". Names are cleaned first ("St." to "St", "-Underground" dropped).
 - Checked 191 stations before Wikipedia rate-limited the bulk test: 187 right, 4 misses (all fixed after), 0 wrong. Normal use is one request per click and results are cached, so the limit isn't a problem.
 - Backend `photos.ts`, endpoints `/api/lines/:id/photo` and `/api/stations/:id/photo`. Frontend `ui/Photo.tsx` with a "Wikipedia" credit link. Images stay on Wikimedia's servers.
+
+## 2026-10-14 — Loading screen
+- Lives in `frontend/index.html` (inline CSS and SVG), so it paints before the 2 MB app script arrives. Three tube-coloured lines draw themselves with glowing trains running along them, then a progress bar and four steps: app, map, track, trains.
+- `src/boot.ts` moves it on. App calls it when the map is created, when it starts fetching lines and track, and when the layers are added. It fades out once the first trains arrive, or after 20 s if TfL sends none.
+- After 6 s on the track step it says the server is waking up (Render's free plan sleeps). Checked by loading the page with the backend off, then starting it: the hint showed, and the screen closed by itself once 506 trains arrived.
+- Bug found while testing: the app's `.card` style gave the loader a grey box. All loader classes now start with `boot-`.
