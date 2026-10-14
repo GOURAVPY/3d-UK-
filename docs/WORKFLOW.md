@@ -23,9 +23,12 @@ PORT=3001
 
 ## Repo layout
 ```
-backend/   Express + TypeScript server (src/: config, tfl, lines, lineColours, server)
-frontend/  Vite + React + TypeScript + MapLibre (src/: App, drawLines, types)
+backend/   Node + Express + Socket.IO API (see the README for a file-by-file map)
+frontend/  Vite + React + MapLibre GL + Three.js
 docs/      this folder
+
+Run everything from the repo root: `npm run setup` once, then `npm run dev`. Before pushing: `npm run typecheck` and
+`npm run format` (CI runs both, plus the build).
 ```
 
 ## Weekly cycle
