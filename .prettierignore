@@ -1,0 +1,7 @@
+node_modules
+dist
+*.json
+docs/demo
+backend/data
+package-lock.json
+*.css
