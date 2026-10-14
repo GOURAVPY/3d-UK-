@@ -26,10 +26,10 @@ PORT=3001
 backend/   Node + Express + Socket.IO API (see the README for a file-by-file map)
 frontend/  Vite + React + MapLibre GL + Three.js
 docs/      this folder
+```
 
 Run everything from the repo root: `npm run setup` once, then `npm run dev`. Before pushing: `npm run typecheck` and
 `npm run format` (CI runs both, plus the build).
-```
 
 ## Weekly cycle
 1. Read the week's goal in `WEEKLY.md`.
