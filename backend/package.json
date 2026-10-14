@@ -4,7 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "data:download": "node scripts/fetch-osm-lines.mjs && node scripts/fetch-osm.mjs && node scripts/fetch-osm-stations.mjs",
+    "data:build": "tsx scripts/build-tracks.ts && tsx scripts/build-lanes.ts && tsx scripts/build-levels.ts && tsx scripts/build-stations.ts",
+    "data:check": "tsx scripts/check-joins.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",
