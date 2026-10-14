@@ -1,5 +1,7 @@
 # Live City 3D
 
+[![CI](https://github.com/GOURAVPY/3d-UK-/actions/workflows/ci.yml/badge.svg)](https://github.com/GOURAVPY/3d-UK-/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Every train in London, live, in 3D.** About 500 Tube, Elizabeth line, Overground and DLR trains moving
 along the real track, under the streets and over the viaducts, plus every aircraft overhead.
 
