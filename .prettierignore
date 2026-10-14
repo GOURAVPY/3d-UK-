@@ -5,3 +5,6 @@ docs/demo
 backend/data
 package-lock.json
 *.css
+docs
+*.md
+frontend/index.html
