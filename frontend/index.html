@@ -4,8 +4,75 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Live City 3D</title>
+    <!-- The loading screen lives here, not in React, so it shows on the first paint while the
+         2 MB app script is still downloading. src/boot.ts moves it along and removes it. -->
+    <style>
+      #boot {
+        position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px;
+        background: radial-gradient(120% 90% at 50% 40%, #171a26 0%, #0a0b10 70%);
+        color: #f3f4f8; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+        transition: opacity 0.6s ease, visibility 0.6s;
+      }
+      #boot.gone { opacity: 0; visibility: hidden; }
+      #boot .card { width: min(360px, 100%); text-align: center; }
+      #boot svg { width: 220px; max-width: 70%; height: auto; overflow: visible; }
+      #boot .track { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 320; stroke-dashoffset: 320;
+        animation: boot-draw 1.4s ease forwards; }
+      #boot .track:nth-of-type(2) { animation-delay: 0.2s; }
+      #boot .track:nth-of-type(3) { animation-delay: 0.4s; }
+      #boot .stop { fill: #0a0b10; stroke: #f3f4f8; stroke-width: 2.5; opacity: 0; animation: boot-fade 0.4s 1.2s forwards; }
+      #boot .train { opacity: 0; animation: boot-fade 0.4s 1.2s forwards; fill: #fff; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)); }
+      #boot h1 { margin: 18px 0 4px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+      #boot .sub { margin: 0 0 22px; color: #a3a9b9; }
+      #boot .bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+      #boot .bar i { display: block; height: 100%; width: 8%; border-radius: inherit;
+        background: linear-gradient(90deg, #e32017, #0098d4, #6950a1); transition: width 0.5s ease; }
+      #boot ol { list-style: none; margin: 16px 0 0; padding: 0; text-align: left; display: grid; gap: 8px; }
+      #boot li { display: flex; align-items: center; gap: 10px; color: #6b7183; transition: color 0.3s; }
+      #boot li::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%;
+        border: 2px solid currentColor; box-sizing: border-box; }
+      #boot li.active { color: #f3f4f8; }
+      #boot li.active::before { border-color: #0098d4; background: #0098d4; animation: boot-pulse 1s ease-in-out infinite; }
+      #boot li.done { color: #a3a9b9; }
+      #boot li.done::before { border-color: #00a86b; background: #00a86b; }
+      #boot .hint { min-height: 20px; margin: 14px 0 0; font-size: 12px; color: #a3a9b9; opacity: 0; transition: opacity 0.4s; }
+      #boot .hint.show { opacity: 1; }
+      @keyframes boot-draw { to { stroke-dashoffset: 0; } }
+      @keyframes boot-fade { to { opacity: 1; } }
+      @keyframes boot-pulse { 50% { transform: scale(0.6); opacity: 0.6; } }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .track { animation: none; stroke-dashoffset: 0; }
+        #boot .stop { animation: none; opacity: 1; }
+        #boot .train { display: none; }
+        #boot li.active::before { animation: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" role="status" aria-live="polite">
+      <div class="card">
+        <svg viewBox="0 0 220 110" aria-hidden="true">
+          <path id="boot-a" class="track" stroke="#e32017" d="M10 62 C 60 62, 80 40, 110 40 S 170 62, 210 62" />
+          <path id="boot-b" class="track" stroke="#0098d4" d="M60 104 C 75 80, 95 70, 110 40 S 140 14, 160 6" />
+          <path id="boot-c" class="track" stroke="#6950a1" d="M20 86 C 70 86, 120 84, 150 70 S 190 40, 205 30" />
+          <circle class="stop" cx="110" cy="40" r="6" />
+          <circle class="stop" cx="150" cy="70" r="5" />
+          <circle class="train" r="4"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#boot-a" /></animateMotion></circle>
+          <circle class="train" r="4"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#boot-b" /></animateMotion></circle>
+          <circle class="train" r="4"><animateMotion dur="3.8s" repeatCount="indefinite"><mpath href="#boot-c" /></animateMotion></circle>
+        </svg>
+        <h1>Live City 3D</h1>
+        <p class="sub">Every train in London, live</p>
+        <div class="bar"><i id="boot-bar"></i></div>
+        <ol id="boot-steps">
+          <li data-step="app" class="active">Loading the app</li>
+          <li data-step="map">Drawing the map of London</li>
+          <li data-step="track">Laying the real track</li>
+          <li data-step="trains">Finding every train</li>
+        </ol>
+        <p class="hint" id="boot-hint"></p>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
