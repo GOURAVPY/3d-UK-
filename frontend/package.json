@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build"
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "record-demo": "node scripts/record-demo.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^6.13.0",
