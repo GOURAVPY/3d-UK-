@@ -508,3 +508,12 @@ The hit test projected the plane's latitude and longitude, i.e. the ground under
 - `src/boot.ts` moves it on. App calls it when the map is created, when it starts fetching lines and track, and when the layers are added. It fades out once the first trains arrive, or after 20 s if TfL sends none.
 - After 6 s on the track step it says the server is waking up (Render's free plan sleeps). Checked by loading the page with the backend off, then starting it: the hint showed, and the screen closed by itself once 506 trains arrived.
 - Bug found while testing: the app's `.card` style gave the loader a grey box. All loader classes now start with `boot-`.
+
+## 2026-10-14 — Clean-up for going public
+- Checked first: no `.env` ever committed (only placeholders in history), no unused code (`tsc --noUnusedLocals --noUnusedParameters` clean), no TODOs or stray `console.log` in the app.
+- Removed 9 empty scaffold folders from day one.
+- Prettier (120 columns) applied to all TS/TSX/MJS, formatting only; CSS, docs and `index.html` keep their hand-written layout.
+- Root `package.json`: `npm run setup`, `npm run dev` (both servers in one terminal via concurrently), `build`, `typecheck`, `format`. Backend gained `data:download`, `data:build`, `data:check`.
+- README rewritten for visitors: screenshots, demo link, quick start, scripts, file map, limits, credits (TfL, OS, OpenStreetMap ODbL, OpenFreeMap, adsb.lol, Wikimedia). MIT license. `.env.example` files explain each value.
+- GitHub Actions CI: setup, typecheck, format check, build.
+- Tested the quick start from a fresh clone: setup, typecheck and build passed, and `npm run dev` served 389 trains with no TfL key.
