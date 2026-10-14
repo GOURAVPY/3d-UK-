@@ -1,4 +1,5 @@
 import { apiFetch } from "./socket";
+import { bootDone, bootStep } from "./boot";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import maplibreWorker from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
@@ -74,6 +75,16 @@ export function App() {
   const [bearing, setBearing] = useState(-15);
   const [shown, setShown] = useState<Shown>({ trains: true, aircraft: true, lines: true, stations: true, buildings: true });
   const { trains, updatedAt } = useTrains();
+
+  // Loading screen: close it once the map is set up and the first trains are on it. If TfL
+  // sends nothing (outage, night), don't keep people waiting: open the map anyway after 20 s.
+  const hasTrains = trains.length > 0;
+  useEffect(() => {
+    if (!ready) return;
+    if (hasTrains) return bootDone();
+    const t = window.setTimeout(bootDone, 20_000);
+    return () => window.clearTimeout(t);
+  }, [ready, hasTrains]);
   const flights = useFlights();
   const status = useStatus();
 
@@ -105,6 +116,7 @@ export function App() {
       bearing: -15,
     });
     mapRef.current = map;
+    bootStep("map");
     map.on("rotate", () => setBearing(map.getBearing()));
     if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = map; // for debugging in the console
     let removed = false;
@@ -116,6 +128,7 @@ export function App() {
       // the first is still fetching, so the second must not add everything twice
       if (removed || map.getSource("lines")) return;
       if (!world.current) {
+        bootStep("track");
         // The server may still be starting: keep asking every few seconds until it answers.
         const json = async (path: string) => {
           const r = await apiFetch(path);
@@ -159,6 +172,7 @@ export function App() {
       }
       setStyleVersion((v) => v + 1);
       setReady(true);
+      bootStep("trains");
     });
 
     // a train wins over a station when both are under the pointer
