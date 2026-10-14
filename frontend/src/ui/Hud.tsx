@@ -31,7 +31,9 @@ export function Hud({ trains, aircraft, now, updatedAt, playback }: Props) {
         </div>
       </div>
       {updatedAt && !playback && (
-        <small>{stale ? "no update since" : "updated"} {londonClock(updatedAt)}</small>
+        <small>
+          {stale ? "no update since" : "updated"} {londonClock(updatedAt)}
+        </small>
       )}
     </section>
   );

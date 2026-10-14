@@ -82,7 +82,10 @@ function makeChain(points: [number, number][]): Chain {
 // for a train that has no known track yet.
 export function stubChain(x: number, y: number, headingDeg: number): Chain {
   const a = (headingDeg * Math.PI) / 180;
-  return makeChain([[x, y], [x + Math.sin(a), y + Math.cos(a)]]);
+  return makeChain([
+    [x, y],
+    [x + Math.sin(a), y + Math.cos(a)],
+  ]);
 }
 
 // Point `s` metres along the chain. Past either end the last segment is extended in a
@@ -147,7 +150,9 @@ export class TrackIndex {
     const forward = a < b;
     const raw = this.levels[forward ? `${lineId}|${a}|${b}` : `${lineId}|${b}|${a}`];
     if (!raw) return [[0, length, 0]];
-    const runs = raw.map(([s, lv], i) => [s, i + 1 < raw.length ? raw[i + 1][0] : length, lv] as [number, number, number]);
+    const runs = raw.map(
+      ([s, lv], i) => [s, i + 1 < raw.length ? raw[i + 1][0] : length, lv] as [number, number, number],
+    );
     if (forward) return runs;
     return runs.map(([s, e, lv]) => [length - e, length - s, lv] as [number, number, number]).reverse();
   }
@@ -308,7 +313,12 @@ export class TrackIndex {
         const r = Math.min(150, c.length * 0.45);
         const coords: [number, number][] = poly.map(([x, y], k) => {
           const d = c.cum[k];
-          const v = d < r ? vs + (l.off - vs) * (d / r) : d > c.length - r ? l.off + (ve - l.off) * ((d - (c.length - r)) / r) : l.off;
+          const v =
+            d < r
+              ? vs + (l.off - vs) * (d / r)
+              : d > c.length - r
+                ? l.off + (ve - l.off) * ((d - (c.length - r)) / r)
+                : l.off;
           const k0 = Math.max(k - 1, 0);
           const k1 = Math.min(k + 1, poly.length - 1);
           const tx = poly[k1][0] - poly[k0][0];

@@ -95,11 +95,13 @@ export function drawLines(map: Map, lines: Line[], index: TrackIndex, night: boo
     data: {
       type: "FeatureCollection",
       // interchanges appear on several lines: keep one dot per station
-      features: [...new globalThis.Map(lines.flatMap((l) => l.stations).map((s) => [s.id, s] as const)).values()].map((s) => ({
-        type: "Feature" as const,
-        properties: { id: s.id, name: s.name },
-        geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
-      })),
+      features: [...new globalThis.Map(lines.flatMap((l) => l.stations).map((s) => [s.id, s] as const)).values()].map(
+        (s) => ({
+          type: "Feature" as const,
+          properties: { id: s.id, name: s.name },
+          geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
+        }),
+      ),
     },
   });
   map.addLayer({
@@ -125,6 +127,10 @@ export function setAlerts(map: Map, status: LineStatus[]) {
   const severe = bad.filter((s) => s.severity <= 6).map((s) => s.lineId);
   map.setFilter("lines-alert", ["in", ["get", "line"], ["literal", bad.map((s) => s.lineId)]]);
   map.setPaintProperty("lines-alert", "line-color", [
-    "match", ["get", "line"], severe.length ? severe : ["-"], "#ff3b30", "#ffb000",
+    "match",
+    ["get", "line"],
+    severe.length ? severe : ["-"],
+    "#ff3b30",
+    "#ffb000",
   ]);
 }

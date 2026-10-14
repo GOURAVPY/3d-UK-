@@ -13,12 +13,54 @@ const SCREEN_PX = 15; // length on screen when zoomed out
 
 // Length in metres by ICAO type code. Anything unknown is drawn as a narrow-body.
 const LENGTH: Record<string, number> = {
-  A388: 73, B744: 71, B748: 76, B77W: 74, B772: 64, B773: 74, B788: 57, B789: 63, B78X: 68,
-  A359: 67, A35K: 74, A333: 63, A332: 59, A343: 63, A346: 75, B763: 55, B752: 47,
-  A321: 44, A21N: 44, A320: 37, A20N: 37, A319: 34, A19N: 34, A318: 31,
-  B738: 39, B38M: 39, B739: 42, B737: 33, B735: 31, E195: 39, E190: 36, E170: 30, E75L: 31,
-  CRJ9: 36, CRJ7: 32, AT76: 27, AT75: 27, DH8D: 33, SF34: 20, F100: 36,
-  C25A: 14, C25B: 16, C56X: 19, GLF5: 29, GL5T: 30, PC12: 14, C172: 8, PA28: 8,
+  A388: 73,
+  B744: 71,
+  B748: 76,
+  B77W: 74,
+  B772: 64,
+  B773: 74,
+  B788: 57,
+  B789: 63,
+  B78X: 68,
+  A359: 67,
+  A35K: 74,
+  A333: 63,
+  A332: 59,
+  A343: 63,
+  A346: 75,
+  B763: 55,
+  B752: 47,
+  A321: 44,
+  A21N: 44,
+  A320: 37,
+  A20N: 37,
+  A319: 34,
+  A19N: 34,
+  A318: 31,
+  B738: 39,
+  B38M: 39,
+  B739: 42,
+  B737: 33,
+  B735: 31,
+  E195: 39,
+  E190: 36,
+  E170: 30,
+  E75L: 31,
+  CRJ9: 36,
+  CRJ7: 32,
+  AT76: 27,
+  AT75: 27,
+  DH8D: 33,
+  SF34: 20,
+  F100: 36,
+  C25A: 14,
+  C25B: 16,
+  C56X: 19,
+  GLF5: 29,
+  GL5T: 30,
+  PC12: 14,
+  C172: 8,
+  PA28: 8,
 };
 const DEFAULT_LENGTH = 38;
 
@@ -57,9 +99,7 @@ function planeGeometries(): { body: THREE.BufferGeometry; tail: THREE.BufferGeom
 
   // two engines under the wings
   for (const x of [-0.19, 0.19]) {
-    parts.push(
-      new THREE.CylinderGeometry(0.03, 0.026, 0.13, 12).toNonIndexed().translate(x, 0.015, -0.062),
-    );
+    parts.push(new THREE.CylinderGeometry(0.03, 0.026, 0.13, 12).toNonIndexed().translate(x, 0.015, -0.062));
   }
 
   // tail fin, drawn separately so it can carry the airline colour

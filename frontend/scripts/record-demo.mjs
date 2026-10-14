@@ -40,10 +40,21 @@ const caption = (text) =>
       el = document.createElement("div");
       el.id = "demo-cap";
       Object.assign(el.style, {
-        position: "fixed", left: "50%", bottom: "28px", transform: "translateX(-50%)", zIndex: 99,
-        padding: "12px 22px", borderRadius: "14px", background: "rgba(10,11,16,0.78)", color: "#fff",
-        font: "600 26px/1.2 system-ui, sans-serif", letterSpacing: "0.01em", backdropFilter: "blur(10px)",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.4)", transition: "opacity 0.4s", whiteSpace: "nowrap",
+        position: "fixed",
+        left: "50%",
+        bottom: "28px",
+        transform: "translateX(-50%)",
+        zIndex: 99,
+        padding: "12px 22px",
+        borderRadius: "14px",
+        background: "rgba(10,11,16,0.78)",
+        color: "#fff",
+        font: "600 26px/1.2 system-ui, sans-serif",
+        letterSpacing: "0.01em",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+        transition: "opacity 0.4s",
+        whiteSpace: "nowrap",
       });
       document.body.appendChild(el);
     }
@@ -71,13 +82,19 @@ await page.waitForSelector(".replay input[type=range]", { timeout: 20_000 });
 const info = await (await fetch("http://localhost:3001/api/history/info")).json();
 const today = new Date();
 const start = Math.max(info.from, Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 6, 40));
-await page.$eval(".replay input[type=range]", (el, v) => {
-  const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
-  set.call(el, String(v));
-  el.dispatchEvent(new Event("input", { bubbles: true }));
-}, start);
+await page.$eval(
+  ".replay input[type=range]",
+  (el, v) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+    set.call(el, String(v));
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  },
+  start,
+);
 await wait(800);
-await exact("Play").click().catch(() => undefined); // scrubbing pauses; start again
+await exact("Play")
+  .click()
+  .catch(() => undefined); // scrubbing pauses; start again
 await map(() => window.__map.easeTo({ bearing: 25, pitch: 58, zoom: 13.4, duration: 13_000, easing: (t) => t }));
 await wait(13_500);
 
@@ -99,12 +116,20 @@ const hit = await map(() => {
 if (hit) {
   await page.mouse.click(hit[0], hit[1]);
   await wait(1200);
-  await page.locator(".panel.train button", { hasText: "Follow" }).first().click({ timeout: 3000 }).catch(() => undefined);
+  await page
+    .locator(".panel.train button", { hasText: "Follow" })
+    .first()
+    .click({ timeout: 3000 })
+    .catch(() => undefined);
 }
 await wait(12_000);
 
 // ---- 3. aircraft at Heathrow ----------------------------------------------------------
-await page.locator(".panel.train button", { hasText: "Stop following" }).first().click({ timeout: 3000 }).catch(() => undefined);
+await page
+  .locator(".panel.train button", { hasText: "Stop following" })
+  .first()
+  .click({ timeout: 3000 })
+  .catch(() => undefined);
 await caption("Every aircraft too: live ADS-B over London");
 await button("Fly to Heathrow").click();
 await wait(8000);
@@ -128,13 +153,42 @@ console.log("saved", webm);
 // Playwright's own build only knows VP8.
 const candidates = [
   process.env.FFMPEG,
-  join(homedir(), "AppData", "Local", "Programs", "Python", "Python314", "Lib", "site-packages", "imageio_ffmpeg", "binaries", "ffmpeg-win-x86_64-v7.1.exe"),
+  join(
+    homedir(),
+    "AppData",
+    "Local",
+    "Programs",
+    "Python",
+    "Python314",
+    "Lib",
+    "site-packages",
+    "imageio_ffmpeg",
+    "binaries",
+    "ffmpeg-win-x86_64-v7.1.exe",
+  ),
   "ffmpeg",
 ].filter(Boolean);
 const ffmpeg = candidates.find((c) => c === "ffmpeg" || existsSync(c));
 if (ffmpeg) {
   try {
-    execFileSync(ffmpeg, ["-y", "-ss", skip.toFixed(1), "-i", webm, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(OUT, "demo.mp4")], { stdio: "ignore" });
+    execFileSync(
+      ffmpeg,
+      [
+        "-y",
+        "-ss",
+        skip.toFixed(1),
+        "-i",
+        webm,
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        join(OUT, "demo.mp4"),
+      ],
+      { stdio: "ignore" },
+    );
     console.log("saved", join(OUT, "demo.mp4"));
   } catch {
     console.log("mp4 not made (this ffmpeg has no H.264 encoder); the .webm plays in any modern browser");

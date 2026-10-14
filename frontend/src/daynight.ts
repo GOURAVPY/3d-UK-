@@ -15,9 +15,7 @@ export function sunElevation(date: Date, lat = LAT, lon = LON): number {
   const dec = Math.asin(Math.sin(eps) * Math.sin(lambda));
   const gmst = (18.697374558 + 24.06570982441908 * n) % 24;
   const hour = (gmst * 15 + lon) * RAD - ra;
-  return (
-    Math.asin(Math.sin(lat * RAD) * Math.sin(dec) + Math.cos(lat * RAD) * Math.cos(dec) * Math.cos(hour)) / RAD
-  );
+  return Math.asin(Math.sin(lat * RAD) * Math.sin(dec) + Math.cos(lat * RAD) * Math.cos(dec) * Math.cos(hour)) / RAD;
 }
 
 // The sun is down (a little below the horizon, so dusk reads as evening, not night).

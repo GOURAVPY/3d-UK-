@@ -32,7 +32,13 @@ interface Props {
 
 const londonTime = (ms: number) =>
   new Date(ms).toLocaleString("en-GB", {
-    timeZone: "Europe/London", weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
+    timeZone: "Europe/London",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
 
 // London's offset from UTC at a moment (60 or 0 minutes), so dates typed in London
@@ -40,9 +46,17 @@ const londonTime = (ms: number) =>
 function londonOffsetMs(ms: number): number {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/London", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-    }).formatToParts(ms).map((x) => [x.type, x.value]),
+      timeZone: "Europe/London",
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+      .formatToParts(ms)
+      .map((x) => [x.type, x.value]),
   );
   const asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
   return Math.round((asUtc - ms) / 1000) * 1000;
@@ -191,7 +205,12 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
     }
   }, [vt, info, load, decode, onFrame]);
 
-  if (!info) return <div className="replay"><span>Loading history…</span></div>;
+  if (!info)
+    return (
+      <div className="replay">
+        <span>Loading history…</span>
+      </div>
+    );
   if (!info.from || !info.to || info.count < 2) {
     return (
       <div className="replay">
@@ -224,9 +243,16 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
             </label>
             <label>
               Time
-              <input type="time" step={1} value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} />
+              <input
+                type="time"
+                step={1}
+                value={draft.time}
+                onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+              />
             </label>
-            <small>Recorded: {londonTime(info.from)} to {londonTime(info.to)}</small>
+            <small>
+              Recorded: {londonTime(info.from)} to {londonTime(info.to)}
+            </small>
           </div>
           <button onClick={confirm}>OK</button>
           <button onClick={() => setEditing(false)}>Cancel</button>
@@ -251,7 +277,9 @@ export function ReplayBar({ lines, onFrame, onClose }: Props) {
           <div className="when">
             <b>{londonTime(vt)}</b>
             <small>{spanMin < 120 ? `${spanMin} min` : `${(spanMin / 60).toFixed(1)} h`} recorded</small>
-            <button className="link" onClick={openEditor}>Edit date &amp; time</button>
+            <button className="link" onClick={openEditor}>
+              Edit date &amp; time
+            </button>
           </div>
           <div className="speed" aria-label="Playback speed">
             <button onClick={() => setSpeed((s) => stepSpeed(s, -1))} aria-label="Slower">

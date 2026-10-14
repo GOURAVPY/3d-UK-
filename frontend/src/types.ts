@@ -1,4 +1,9 @@
-export interface Station { id: string; name: string; lat: number; lon: number }
+export interface Station {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
 export interface Line {
   id: string;
   name: string;
@@ -33,7 +38,6 @@ export interface Train {
   d0: number;
   d1: number;
 }
-
 
 // A public live stream. `youtubeId` embeds it; without one we only link out.
 export interface Stream {

@@ -44,7 +44,11 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const flights3d = useRef<ReturnType<typeof createFlightsLayer> | null>(null);
-  const world = useRef<{ lines: Line[]; index: TrackIndex; layout: { type: "FeatureCollection"; features: unknown[] } } | null>(null);
+  const world = useRef<{
+    lines: Line[];
+    index: TrackIndex;
+    layout: { type: "FeatureCollection"; features: unknown[] };
+  } | null>(null);
   const [underground, setUnderground] = useState(() => new URLSearchParams(location.search).has("underground"));
   const undergroundRef = useRef(false);
   undergroundRef.current = underground;
@@ -73,7 +77,13 @@ export function App() {
   const [fullscreen, setFullscreen] = useState(false);
   const [replayCount, setReplayCount] = useState(0);
   const [bearing, setBearing] = useState(-15);
-  const [shown, setShown] = useState<Shown>({ trains: true, aircraft: true, lines: true, stations: true, buildings: true });
+  const [shown, setShown] = useState<Shown>({
+    trains: true,
+    aircraft: true,
+    lines: true,
+    stations: true,
+    buildings: true,
+  });
   const { trains, updatedAt } = useTrains();
 
   // Loading screen: close it once the map is set up and the first trains are on it. If TfL
@@ -135,11 +145,23 @@ export function App() {
           if (!r.ok) throw new Error(`${path} ${r.status}`);
           return r.json();
         };
-        let loaded: [Line[], Record<string, [number, number][]>, Record<string, number>, Record<string, [number, number][]>, { type: "FeatureCollection"; features: unknown[] }] | null = null;
+        let loaded:
+          | [
+              Line[],
+              Record<string, [number, number][]>,
+              Record<string, number>,
+              Record<string, [number, number][]>,
+              { type: "FeatureCollection"; features: unknown[] },
+            ]
+          | null = null;
         while (!loaded && !removed) {
           try {
             loaded = await Promise.all([
-              json("/api/lines"), json("/api/tracks"), json("/api/lanes"), json("/api/levels"), json("/api/layout"),
+              json("/api/lines"),
+              json("/api/tracks"),
+              json("/api/lanes"),
+              json("/api/levels"),
+              json("/api/layout"),
             ]);
           } catch {
             await new Promise((r) => setTimeout(r, 3000));
@@ -168,7 +190,10 @@ export function App() {
       flights3d.current.setNight(dark);
       map.addLayer(flights3d.current.layer);
       if (import.meta.env.DEV) {
-        (window as unknown as { __layers: unknown }).__layers = { trains: trains3d.current, flights: flights3d.current };
+        (window as unknown as { __layers: unknown }).__layers = {
+          trains: trains3d.current,
+          flights: flights3d.current,
+        };
       }
       setStyleVersion((v) => v + 1);
       setReady(true);
@@ -197,7 +222,10 @@ export function App() {
       if (!map.getLayer("stations")) return;
       const pad = 9;
       const hit = map.queryRenderedFeatures(
-        [[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]],
+        [
+          [e.point.x - pad, e.point.y - pad],
+          [e.point.x + pad, e.point.y + pad],
+        ],
         { layers: ["stations"] },
       )[0];
       if (hit) {
@@ -211,7 +239,10 @@ export function App() {
       const over = trains3d.current?.pick(e.point.x, e.point.y) ?? flights3d.current?.pick(e.point.x, e.point.y);
       const near = map.getLayer("stations")
         ? map.queryRenderedFeatures(
-            [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]],
+            [
+              [e.point.x - 6, e.point.y - 6],
+              [e.point.x + 6, e.point.y + 6],
+            ],
             { layers: ["stations"] },
           ).length
         : 0;
@@ -362,9 +393,7 @@ export function App() {
     // aircraft fly high: aim the camera at the plane itself, not the ground under it
     if (!selectedId) map.setCenterClampedToGround(false);
     const tick = () => {
-      const p = selectedId
-        ? trains3d.current?.positionOf(targetId)
-        : flights3d.current?.positionOf(targetId);
+      const p = selectedId ? trains3d.current?.positionOf(targetId) : flights3d.current?.positionOf(targetId);
       if (p) {
         if (selectedId) {
           const lv = trains3d.current?.levelOf(selectedId);

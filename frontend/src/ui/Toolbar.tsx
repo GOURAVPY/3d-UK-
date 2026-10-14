@@ -50,7 +50,14 @@ function Btn({ icon, tip, on, badge, label, onClick, children }: BtnProps) {
 // A compass whose needle turns with the map. Red end points north.
 function Compass({ bearing }: { bearing: number }) {
   return (
-    <svg className="needle" width="22" height="22" viewBox="0 0 24 24" style={{ transform: `rotate(${-bearing}deg)` }} aria-hidden="true">
+    <svg
+      className="needle"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      style={{ transform: `rotate(${-bearing}deg)` }}
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.6" opacity="0.6" />
       <path d="M12 3 15 12 9 12z" fill="#ff453a" />
       <path d="M12 21 15 12 9 12z" fill="currentColor" opacity="0.45" />

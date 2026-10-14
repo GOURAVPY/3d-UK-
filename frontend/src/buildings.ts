@@ -14,15 +14,28 @@ export function add3dBuildings(map: Map, night: boolean) {
     minzoom: isSmallScreen ? 14.5 : 13,
     paint: {
       "fill-extrusion-color": [
-        "interpolate", ["linear"], ["coalesce", ["get", "render_height"], 8],
-        0, night ? "#1b1e2b" : "#e4e4df",
-        40, night ? "#272c40" : "#c4c4c0",
-        150, night ? "#3a4263" : "#9a9a98",
+        "interpolate",
+        ["linear"],
+        ["coalesce", ["get", "render_height"], 8],
+        0,
+        night ? "#1b1e2b" : "#e4e4df",
+        40,
+        night ? "#272c40" : "#c4c4c0",
+        150,
+        night ? "#3a4263" : "#9a9a98",
       ],
       "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8],
       "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
       // building data only exists from zoom 13, so fade in rather than pop
-      "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], isSmallScreen ? 14.5 : 13, 0, isSmallScreen ? 15.3 : 13.8, night ? 0.92 : 0.85],
+      "fill-extrusion-opacity": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        isSmallScreen ? 14.5 : 13,
+        0,
+        isSmallScreen ? 15.3 : 13.8,
+        night ? 0.92 : 0.85,
+      ],
     },
   });
 }

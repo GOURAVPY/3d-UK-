@@ -57,7 +57,10 @@ export function TrainPanel({ train, following, onFollow, onClose }: Props) {
       <div className="train-head">
         <i className="bar" />
         <div className="title">
-          <b>{train.lineName}{/line$/i.test(train.lineName) ? "" : " line"}</b>
+          <b>
+            {train.lineName}
+            {/line$/i.test(train.lineName) ? "" : " line"}
+          </b>
           <span>
             <mark>{train.platform.split(" - ")[0] || "Train"}</mark> for {destination}
           </span>

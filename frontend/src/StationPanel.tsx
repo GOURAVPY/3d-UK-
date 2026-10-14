@@ -135,9 +135,7 @@ export function StationPanel({ stationId, name, onClose }: Props) {
                 </div>
               )}
               {otherModes.length > 0 && (
-                <p className="facts">
-                  Also: {otherModes.map((m) => MODE_NAMES[m] ?? m).join(" · ")}
-                </p>
+                <p className="facts">Also: {otherModes.map((m) => MODE_NAMES[m] ?? m).join(" · ")}</p>
               )}
               {facilities.length > 0 && <p className="facts">{facilities.join(" · ")}</p>}
               {details.address && <p className="facts addr">{details.address}</p>}

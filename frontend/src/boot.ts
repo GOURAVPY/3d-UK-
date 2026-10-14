@@ -26,7 +26,8 @@ export function bootStep(step: BootStep) {
   // The free backend sleeps when idle and takes up to a minute to wake: say so instead of looking stuck.
   window.clearTimeout(slowTimer);
   hint("");
-  if (step === "track") slowTimer = window.setTimeout(() => hint("Waking up the server. This can take up to a minute."), 6000);
+  if (step === "track")
+    slowTimer = window.setTimeout(() => hint("Waking up the server. This can take up to a minute."), 6000);
   if (step === "trains") slowTimer = window.setTimeout(() => hint("Waiting for the first live update from TfL…"), 8000);
 }
 
