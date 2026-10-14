@@ -17,7 +17,12 @@ const STEP = 20; // sample the track every 20 m
 const NEAR = 22; // two samples closer than this are the same track
 const MIN_SHARE = 0.5; // a link counts as shared when half of it runs alongside another
 
-interface Sample { x: number; y: number; tx: number; ty: number }
+interface Sample {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+}
 interface Link {
   key: string;
   line: string;
@@ -72,11 +77,13 @@ console.log(`${links.length} links`);
 const CELL = 40;
 const grid = new Map<string, [number, number][]>(); // cell -> [link, sample]
 const cellOf = (x: number, y: number) => `${Math.floor(x / CELL)},${Math.floor(y / CELL)}`;
-links.forEach((l, i) => l.samples.forEach((s, j) => {
-  const k = cellOf(s.x, s.y);
-  if (!grid.has(k)) grid.set(k, []);
-  grid.get(k)!.push([i, j]);
-}));
+links.forEach((l, i) =>
+  l.samples.forEach((s, j) => {
+    const k = cellOf(s.x, s.y);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k)!.push([i, j]);
+  }),
+);
 
 // shared[i] -> Map(j -> { hits, dot })
 const shared: Map<number, { hits: number; dot: number }>[] = links.map(() => new Map());

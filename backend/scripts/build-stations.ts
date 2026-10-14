@@ -65,7 +65,10 @@ function classify(t: Record<string, string>): Kind | null {
   if (t.railway === "platform" || t.public_transport === "platform") return "platform";
   if (t.railway === "station" || t.building === "train_station" || t.public_transport === "station") return "station";
   if (t.highway === "corridor" || t.indoor === "corridor") return "passage";
-  if (["footway", "steps", "pedestrian", "path"].includes(t.highway) && ["yes", "building_passage"].includes(t.tunnel)) {
+  if (
+    ["footway", "steps", "pedestrian", "path"].includes(t.highway) &&
+    ["yes", "building_passage"].includes(t.tunnel)
+  ) {
     return "passage";
   }
   if (t.indoor === "room" || t.indoor === "area") return "station";
@@ -78,7 +81,11 @@ for (const el of els) {
     if (t.railway !== "subway_entrance" || el.lat === undefined || el.lon === undefined) continue;
     const p: LngLat = [el.lon, el.lat];
     if (!nearStation(p)) continue;
-    features.push({ type: "Feature", properties: { k: "entrance" }, geometry: { type: "Point", coordinates: [round(p[0]), round(p[1])] } });
+    features.push({
+      type: "Feature",
+      properties: { k: "entrance" },
+      geometry: { type: "Point", coordinates: [round(p[0]), round(p[1])] },
+    });
     count.entrance = (count.entrance ?? 0) + 1;
     continue;
   }
@@ -87,15 +94,12 @@ for (const el of els) {
   const pts = el.geometry.map((g) => [round(g.lon), round(g.lat)] as LngLat);
   const mid = pts[Math.floor(pts.length / 2)];
   if (!nearStation(mid) && !nearStation(pts[0])) continue;
-  const closed =
-    pts.length >= 4 && pts[0][0] === pts[pts.length - 1][0] && pts[0][1] === pts[pts.length - 1][1];
+  const closed = pts.length >= 4 && pts[0][0] === pts[pts.length - 1][0] && pts[0][1] === pts[pts.length - 1][1];
   const asArea = closed && (kind === "station" || kind === "platform");
   features.push({
     type: "Feature",
     properties: { k: kind },
-    geometry: asArea
-      ? { type: "Polygon", coordinates: [pts] }
-      : { type: "LineString", coordinates: pts },
+    geometry: asArea ? { type: "Polygon", coordinates: [pts] } : { type: "LineString", coordinates: pts },
   });
   const label = asArea ? kind : kind === "passage" ? "passage" : `${kind} (line)`;
   count[label] = (count[label] ?? 0) + 1;

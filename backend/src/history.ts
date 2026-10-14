@@ -6,7 +6,15 @@
 //   [line, vehicle, from, to, before, after, d0, d1, heading]
 // The file is only indexed in memory (time, byte offset, length); slices are read on request.
 import {
-  closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync, writeFileSync, appendFileSync,
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  statSync,
+  writeFileSync,
+  appendFileSync,
 } from "node:fs";
 import type { Train } from "./arrivals.js";
 import type { Line } from "./lines.js";
@@ -16,7 +24,11 @@ const FILE = `${DIR}/history.jsonl`;
 const META = `${DIR}/history-meta.json`;
 const KEEP_MS = 24 * 3600 * 1000;
 
-interface Entry { t: number; off: number; len: number }
+interface Entry {
+  t: number;
+  off: number;
+  len: number;
+}
 let index: Entry[] = [];
 let stations: string[] = [];
 let stationIdx = new Map<string, number>();
@@ -63,8 +75,15 @@ export function recordSnapshot(trains: Train[], t = Date.now()) {
     const before = tr.fromIndex > 0 ? (stationIdx.get(tr.ids[0]) ?? -1) : -1;
     const after = tr.ids.length > tr.fromIndex + 2 ? (stationIdx.get(tr.ids[tr.fromIndex + 2]) ?? -1) : -1;
     rows.push([
-      line, tr.id.slice(tr.lineId.length + 1), from, to, before, after,
-      Math.round(tr.d0), Math.round(tr.d1), Math.round(tr.heading),
+      line,
+      tr.id.slice(tr.lineId.length + 1),
+      from,
+      to,
+      before,
+      after,
+      Math.round(tr.d0),
+      Math.round(tr.d1),
+      Math.round(tr.heading),
     ]);
   }
   if (!rows.length) return;

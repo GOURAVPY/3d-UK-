@@ -31,7 +31,13 @@ function levelOf(tags: Record<string, string> = {}): number {
 
 // ---- index every segment of every way ----
 const ways = (JSON.parse(readFileSync("data/raw/osm-rail.json", "utf8")).elements as Way[]).filter((w) => w.geometry);
-interface Seg { ax: number; ay: number; bx: number; by: number; level: number }
+interface Seg {
+  ax: number;
+  ay: number;
+  bx: number;
+  by: number;
+  level: number;
+}
 const CELL = 60;
 const grid = new Map<string, Seg[]>();
 for (const w of ways) {
@@ -39,7 +45,11 @@ for (const w of ways) {
   const g = w.geometry!;
   for (let i = 1; i < g.length; i++) {
     const seg: Seg = {
-      ax: g[i - 1].lon * KX, ay: g[i - 1].lat * KY, bx: g[i].lon * KX, by: g[i].lat * KY, level,
+      ax: g[i - 1].lon * KX,
+      ay: g[i - 1].lat * KY,
+      bx: g[i].lon * KX,
+      by: g[i].lat * KY,
+      level,
     };
     const x0 = Math.floor(Math.min(seg.ax, seg.bx) / CELL) - 0;
     const x1 = Math.floor(Math.max(seg.ax, seg.bx) / CELL);
@@ -135,4 +145,6 @@ writeFileSync("data/levels.json", JSON.stringify(out));
 const all = metres["-1"] + metres["0"] + metres["1"];
 const pct = (v: number) => `${((100 * v) / all).toFixed(0)}%`;
 console.log(`links with an underground or elevated stretch: ${withLevels} of ${Object.keys(tracks).length}`);
-console.log(`track length: underground ${pct(metres["-1"])}, surface ${pct(metres["0"])}, elevated ${pct(metres["1"])}`);
+console.log(
+  `track length: underground ${pct(metres["-1"])}, surface ${pct(metres["0"])}, elevated ${pct(metres["1"])}`,
+);

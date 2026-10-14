@@ -12,9 +12,17 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { distance } from "../src/geo.js";
 import { loadAllLines, type LngLat } from "../src/lines.js";
 
-interface Geom { lat: number; lon: number }
-interface Way { geometry?: Geom[] }
-interface Relation { tags?: { name?: string }; members?: { type: string; geometry?: Geom[] }[] }
+interface Geom {
+  lat: number;
+  lon: number;
+}
+interface Way {
+  geometry?: Geom[];
+}
+interface Relation {
+  tags?: { name?: string };
+  members?: { type: string; geometry?: Geom[] }[];
+}
 
 class Graph {
   coords: LngLat[] = [];
@@ -76,7 +84,10 @@ class Graph {
         }
       }
     }
-    return found.sort((u, v) => u[0] - v[0]).slice(0, max).map((f) => f[1]);
+    return found
+      .sort((u, v) => u[0] - v[0])
+      .slice(0, max)
+      .map((f) => f[1]);
   }
 
   // A* from any of `froms` to any of `tos` (heading for the point `goal`);
@@ -174,7 +185,12 @@ for (const line of lines) {
     const looseA = graph.near(pa, SNAP, CANDIDATES);
     const looseB = graph.near(pb, SNAP, CANDIDATES);
     let path: LngLat[] | null = null;
-    for (const [fa, fb] of [[fixedA, fixedB], [fixedA, looseB], [looseA, fixedB], [looseA, looseB]]) {
+    for (const [fa, fb] of [
+      [fixedA, fixedB],
+      [fixedA, looseB],
+      [looseA, fixedB],
+      [looseA, looseB],
+    ]) {
       if (!fa.length || !fb.length) continue;
       path = graph.route(fa, fb, pb, limit);
       if (path) break;

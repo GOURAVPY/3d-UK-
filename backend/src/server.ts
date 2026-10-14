@@ -50,7 +50,8 @@ app.get("/api/history/info", (_req, res) => res.json(historyInfo()));
 app.get("/api/history", (req, res) => {
   const from = Number(req.query.from);
   const to = Number(req.query.to);
-  if (!Number.isFinite(from) || !Number.isFinite(to)) return res.status(400).json({ error: "from and to are required" });
+  if (!Number.isFinite(from) || !Number.isFinite(to))
+    return res.status(400).json({ error: "from and to are required" });
   res.json(readHistory(from, to, 400));
 });
 // Upcoming stops of one train (id like "victoria:213"), for its timeline panel.

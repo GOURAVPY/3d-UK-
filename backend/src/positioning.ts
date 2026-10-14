@@ -11,7 +11,12 @@ const SPEED: Record<string, number> = {
 const SNAP_METRES = 200;
 
 const clean = (s: string) =>
-  s.toLowerCase().replace(/\(.*?\)/g, "").replace(/\b(underground|dlr|rail|station)\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  s
+    .toLowerCase()
+    .replace(/\(.*?\)/g, "")
+    .replace(/\b(underground|dlr|rail|station)\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 export class LineTracks {
   private paths: Track[];
@@ -101,7 +106,10 @@ function nearest(p: Track, pt: LngLat): number {
   let bestD = SNAP_METRES;
   p.coords.forEach((c, i) => {
     const d = distance(c, pt);
-    if (d < bestD) { bestD = d; best = i; }
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
   });
   return best;
 }

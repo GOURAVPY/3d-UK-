@@ -71,14 +71,8 @@ export function stopsFor(trainId: string): Stop[] | undefined {
 // One request per line. The same train appears in many stations' predictions,
 // so group by vehicle: its soonest prediction is the next stop, the one after
 // that tells us which way it is heading.
-export async function fetchTrains(
-  lines: Line[],
-  tracks: Map<string, LineTracks>,
-  horizonS: number,
-): Promise<Train[]> {
-  const results = await Promise.allSettled(
-    lines.map((l) => tfl<Prediction[]>(`/Line/${l.id}/Arrivals`)),
-  );
+export async function fetchTrains(lines: Line[], tracks: Map<string, LineTracks>, horizonS: number): Promise<Train[]> {
+  const results = await Promise.allSettled(lines.map((l) => tfl<Prediction[]>(`/Line/${l.id}/Arrivals`)));
   if (results.every((r) => r.status === "rejected")) {
     throw new Error(`TfL unreachable: ${(results[0] as PromiseRejectedResult).reason}`);
   }

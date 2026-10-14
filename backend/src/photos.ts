@@ -63,7 +63,11 @@ const baseName = (name: string) =>
     .replace(/\bSt\. /g, "St ") // Wikipedia writes "St James's Park"
     .trim();
 
-interface SearchPage { title: string; index: number; thumbnail?: { source: string } }
+interface SearchPage {
+  title: string;
+  index: number;
+  thumbnail?: { source: string };
+}
 
 /** Searches Wikipedia for the station's own article and returns its photo. */
 export async function stationPhoto(id: string, name: string): Promise<Photo | null> {
@@ -71,11 +75,19 @@ export async function stationPhoto(id: string, name: string): Promise<Photo | nu
   if (cache.has(key)) return cache.get(key)!;
   const base = baseName(name);
   const params = new URLSearchParams({
-    action: "query", format: "json", generator: "search", gsrlimit: "8",
-    gsrsearch: `${base} intitle:station London`, prop: "pageimages", piprop: "thumbnail", pithumbsize: "480",
+    action: "query",
+    format: "json",
+    generator: "search",
+    gsrlimit: "8",
+    gsrsearch: `${base} intitle:station London`,
+    prop: "pageimages",
+    piprop: "thumbnail",
+    pithumbsize: "480",
   });
   const r = await get<{ query?: { pages: Record<string, SearchPage> } }>(`${WIKI}/w/api.php?${params}`);
-  const pages = Object.values(r.query?.pages ?? {}).filter((p) => p.thumbnail).sort((a, b) => a.index - b.index);
+  const pages = Object.values(r.query?.pages ?? {})
+    .filter((p) => p.thumbnail)
+    .sort((a, b) => a.index - b.index);
   const lower = base.toLowerCase();
   // best: an exact "<name> station" style title; next: the top result whose title starts with the name
   // the kind TfL names ("... DLR Station") decides which same-named article wins

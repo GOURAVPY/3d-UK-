@@ -3,7 +3,12 @@ import { LINE_COLOURS } from "./lineColours.js";
 import { tfl } from "./tfl.js";
 
 export type LngLat = [number, number];
-export interface Station { id: string; name: string; lat: number; lon: number }
+export interface Station {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
 export interface Line {
   id: string;
   name: string;
@@ -34,7 +39,8 @@ async function loadLine(id: string, name: string, mode: string): Promise<Line> {
     }
     for (const group of seq.stopPointSequences) {
       for (let i = 1; i < group.stopPoint.length; i++) {
-        const a = group.stopPoint[i - 1].id, b = group.stopPoint[i].id;
+        const a = group.stopPoint[i - 1].id,
+          b = group.stopPoint[i].id;
         links.set([a, b].sort().join("|"), [a, b]);
       }
       for (const sp of group.stopPoint) {
@@ -43,7 +49,9 @@ async function loadLine(id: string, name: string, mode: string): Promise<Line> {
     }
   }
   return {
-    id, name, mode,
+    id,
+    name,
+    mode,
     colour: LINE_COLOURS[id] ?? "#888888",
     paths: [...paths.values()],
     stations: [...stations.values()],

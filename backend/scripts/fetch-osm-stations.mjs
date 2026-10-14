@@ -4,8 +4,12 @@
 // Output: data/raw/osm-stations.json (git-ignored).
 import { mkdirSync, writeFileSync } from "node:fs";
 
-const SOUTH = 51.28, WEST = -0.58, NORTH = 51.72, EAST = 0.36;
-const COLS = 3, ROWS = 3;
+const SOUTH = 51.28,
+  WEST = -0.58,
+  NORTH = 51.72,
+  EAST = 0.36;
+const COLS = 3,
+  ROWS = 3;
 const SERVERS = [
   "https://overpass.openstreetmap.fr/api/interpreter",
   "https://overpass-api.de/api/interpreter",
@@ -31,7 +35,11 @@ async function run(q) {
     try {
       const res = await fetch(server, {
         method: "POST",
-        headers: { "User-Agent": "live-city-3d-student-project/0.1", "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+        headers: {
+          "User-Agent": "live-city-3d-student-project/0.1",
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
         body: "data=" + encodeURIComponent(q),
         signal: AbortSignal.timeout(200_000),
       });
