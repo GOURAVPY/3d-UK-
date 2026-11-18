@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Live City 3D: a cube drawn as three Tube lines meeting at an interchange ring. -->
+  <rect width="64" height="64" rx="14.4" fill="#12141c" />
+  <g fill="none" stroke-width="6.64" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#e32017" d="M32 33.34V10.5l20.16 10.08" />
+    <path stroke="#0098d4" d="M32 33.34l20.16 10.08L32 53.5" />
+    <path stroke="#6950a1" d="M32 33.34L11.84 43.42V20.58" />
+  </g>
+  <circle cx="32" cy="33.34" r="6.45" fill="#fff" />
+  <circle cx="32" cy="33.34" r="3.06" fill="#12141c" />
+</svg>
