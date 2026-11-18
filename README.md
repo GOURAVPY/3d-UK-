@@ -9,7 +9,7 @@ along the real track, under the streets and over the viaducts, plus every aircra
 
 ![Rush hour in central London, played back at 60x](docs/demo/preview.jpg)
 
-▶ **[Watch the 1-minute demo](docs/demo/demo.mp4)** · 📖 **[How it works](docs/HOW-IT-WORKS.md)**
+▶ **[Watch the 1-minute demo](docs/demo/demo.mp4)** · 🎬 **[23-second launch video](docs/demo/launch.mp4)** · 📖 **[How it works](docs/HOW-IT-WORKS.md)**
 
 TfL doesn't publish where its trains are. It publishes countdowns: "train 241 reaches Warren Street in 95 seconds".
 This app works backwards from those countdowns to a point on the real track, then animates every train between
