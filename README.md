@@ -13,6 +13,8 @@ TfL doesn't publish where its trains are. It publishes countdowns: "train 241 re
 This app works backwards from those countdowns to a point on the real track, then animates every train between
 updates. The [write-up](docs/HOW-IT-WORKS.md) walks through the maths.
 
+![From a countdown to a place on the track: 95 seconds becomes 820 metres before Warren Street](docs/assets/how-it-works.png)
+
 ## Features
 
 - **Live trains in 3D** on real OpenStreetMap track. Six-carriage models bend round curves and share corridors in lanes.
@@ -23,6 +25,8 @@ updates. The [write-up](docs/HOW-IT-WORKS.md) walks through the maths.
 - **Playback**: scrub back through the last 24 hours at up to 600x.
 - **Delay alerts** from TfL service status, highlighted on the map.
 - **Day and night** by London's real sunset, an Underground Mode with station layouts, and a phone layout.
+
+![What the app draws: trains under the streets and on viaducts, stations, and aircraft overhead](docs/assets/layers.png)
 
 ![Following a Northern line train past Euston](docs/demo/follow.jpg)
 
